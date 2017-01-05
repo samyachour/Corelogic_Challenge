@@ -14,7 +14,7 @@ def getImage(latitude, longitude, zoom, size, tag):
     
 #TEST getImage("33.796745", "-117.851196", "18", "400x400")
 
-def retreiveAerialImages(numRows):
+def retrieveAerialImages(numRows):
     df = pandas.read_csv("../Resources/Corelogic_houses.csv")
     STOP = 0
     
@@ -33,4 +33,4 @@ def retreiveAerialImages(numRows):
         cropped = original.crop((0, 0, width, height-22))
         cropped.save("img" + str(i) + ".png")
     
-retreiveAerialImages(3)
+retrieveAerialImages(3)

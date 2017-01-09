@@ -16,7 +16,7 @@ def getImage(latitude, longitude, zoom, size, tag):
 #TEST getImage("33.796745", "-117.851196", "18", "400x400")
 
 def retrieveAerialImages(numRows):
-    df = pandas.read_csv("../CorelogicResources/Corelogic_houses_csv_sorted.csv")
+    df = pandas.read_csv("../CorelogicResources/Corelogic_houses_csv.csv")
     STOP = 0
     
     # Retreive aerial images using the google API

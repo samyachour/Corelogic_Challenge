@@ -1,4 +1,6 @@
 library(RPostgreSQL)
+library(rgeos)
+library(sp)
 
 drv <- dbDriver("PostgreSQL")
 con <- dbConnect(drv, dbname = "parcels",

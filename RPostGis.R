@@ -6,3 +6,4 @@ con <- dbConnect(drv, dbname = "parcels",
                  user = "samy")
 
 dbExistsTable(con, "parcelterminal")
+dbExistsTable(con, "topographical")

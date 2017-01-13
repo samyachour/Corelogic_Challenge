@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from shapely.wkt import loads as wkt_loads
 from matplotlib.collections import LineCollection
 from mpl_toolkits.basemap import Basemap
+import stateplane
 
 def db_connection():
     main_dt = {
@@ -21,7 +22,7 @@ def map_definition(main_dt):
     main_dt['parcelterminal']['parcels'] = {
         'table': 'parcelterminal',  # name of the table
         'geo_col': 'geom',  # name of the geometry column
-        'id_col': 'gid',  # name of the geo-id column
+        'id_col': 'parcelid',  # name of the geo-id column
         'schema': 'public',  # name of the schema
         'simp_tolerance': '0.01',  # simplification tolerance (1)
         'where_col': 'gid',  # column for the where-condition
@@ -44,13 +45,13 @@ def execute_read_db(dic, db_string):
     conn.close()
     return values
     
-'''
+
 def box_definition(main_dt):
-    main_dt['x1'] = 3.  # longitude, east
-    main_dt['x2'] = 16.  # longitude, east
-    main_dt['y1'] = 47.  # latitude, north
-    main_dt['y2'] = 56.  # latitude, north
-'''
+    main_dt['x1'] = -117.418098  # longitude, east
+    main_dt['x2'] = -116.997871  # longitude, east
+    main_dt['y1'] = 33.243695  # latitude, north
+    main_dt['y2'] = 33.092530  # latitude, north
+
     
 def fetch_geometries(main_dt):
     '''
@@ -64,12 +65,73 @@ def fetch_geometries(main_dt):
         WHERE "{where_col}" {where_cond}
         ORDER BY {id_col} DESC;'''
 
-    for key in list(main_dt['parcelterminal'].keys()):
-        main_dt['parcelterminal'][key]['geom'] = execute_read_db(
-            main_dt, sql_str.format(
-                **main_dt['parcelterminal'][key]))
-        
+    main_dt['parcelterminal']['parcels']['geom'] = execute_read_db(
+        main_dt, sql_str.format(
+            **main_dt['parcelterminal']['parcels']))
+
+
+
+def create_plot(main_dt):
+    'Creates the basic plot object.'
+    main_dt['ax'] = plt.subplot(111)
+    plt.box(on=None)
+
+def create_basemap(main_dt):
+    'Creates the basemap.'
+    main_dt['m'] = Basemap(
+        resolution='i', epsg=None, projection='merc',
+        llcrnrlat=main_dt['y1'], urcrnrlat=main_dt['y2'],
+        llcrnrlon=main_dt['x1'], urcrnrlon=main_dt['x2']
+        #,lat_ts=(main_dt['x1'] + main_dt['x2']) / 2
+                )
+    main_dt['m'].drawcoastlines(linewidth=0)
+
+def create_vectors_multipolygon(main_dt, multipolygon):
+    'Create the vectors for MultiPolygons, given'
+    '''
+    (Decimal('86055'), 
+    'MULTIPOLYGON(((6231408.67900001 2006327.18700001,6231364.956 
+     2006254.02500001,6231267 2006308.999,6231293.689 2006354.17900001,6231311 2006384,
+     6231408.67900001 2006327.18700001)))'
+    '''
+    vectors = []
+    seg = []
+    inputString = multipolygon[1][15:-3]
+    inputString = inputString.split(",")
+    for coord in inputString:
+        coords = stateplane.to_latlon(float(coord.split(" ")[0]), float(coord.split(" ")[1]), epsg='2230')
+        seg.append(main_dt['m'](coords[0], coords[1]))
+
+    vectors.append(np.asarray(seg))
+    return vectors
+    
+def create_geoplot(main_dt):
+    ''
+    '''
+    for mp in main_dt['parcelterminal']['parcels']['geom']:
+        vectors = create_vectors_multipolygon(main_dt, mp)
+        lines = LineCollection(vectors, antialiaseds=(1, ))
+        lines.set_facecolors(main_dt['parcelterminal']['parcels']['facecolor'])
+        lines.set_edgecolors('white')
+        lines.set_linewidth(1)
+        main_dt['ax'].add_collection(lines)
+    '''
+    vectors = create_vectors_multipolygon(main_dt, main_dt['parcelterminal']['parcels']['geom'][2])
+    lines = LineCollection(vectors, antialiaseds=(1, ))
+    lines.set_facecolors(main_dt['parcelterminal']['parcels']['facecolor'])
+    lines.set_edgecolors('white')
+    lines.set_linewidth(1)
+    main_dt['ax'].add_collection(lines)
+    
 main_dt = db_connection()
 map_definition(main_dt)
+box_definition(main_dt)
 fetch_geometries(main_dt)
 print(main_dt['parcelterminal']['parcels']['geom'][0])
+create_plot(main_dt)
+create_basemap(main_dt)
+create_geoplot(main_dt)
+plt.tight_layout()
+plt.show()
+
+    

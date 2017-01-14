@@ -27,21 +27,44 @@ def getPolygon(geomCol, table, idCol, rowNum):
         
         
 
-getPolygon("geom", "public.parcelterminal", "gid", 1)
+#getPolygon("geom", "public.parcelterminal", "gid", 1)
 #getPolygon("geom", "public.topographical", "id", 0)
 
 
-
-
+# TODO make single column for parcel data too
+def getCentroids():
+    engine = create_engine('postgresql://@localhost:5432/parcels')
+    sql3 = """ALTER TABLE topographical ADD centroid GEOMETRY;"""
+    #sql3 = """ALTER TABLE topographical DROP centroid;"""
+    #engine.connect().execute(sql3)
+    
+    #for i in range(1, 111689):
+    for i in range(1, 111689):
+        sql = 'SELECT *, ST_AsText("geom") FROM public.topographical WHERE "id" = {};'.format(i)
+        data = pd.read_sql(sql, engine)
+        shape = wkt.loads(data['st_astext'].iloc[0])
+        centroid = shape.centroid.wkt
+        print(centroid)
+        sql2 = """
+        UPDATE public.topographical
+        SET centroid = ST_GeometryFromText('{}', 2230)
+        WHERE id = {};
+        """.format(centroid, i)
+        engine.connect().execute(sql2)
+    
+    
+getCentroids()
 
 
 def test(rowNum=0):
     engine = create_engine('postgresql://@localhost:5432/parcels')
-    #sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal WHERE "multi" = \'Y\';'
-    sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal WHERE "gid" < 7'
+    #sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal;'
+    #sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal WHERE "gid" < 7'
+    sql = 'SELECT *, ST_AsText("centroid") FROM public.topographical WHERE "id" < 5'
     data = pd.read_sql(sql, engine)
-    print(type(wkt.loads(data['st_astext'].iloc[rowNum])))
-    
+    #print(data)
+    print(wkt.loads(data['st_astext'].iloc[rowNum]))
+    #print(type(data['geom'].iloc[rowNum]))
     '''
     print(data['st_astext'].iloc[rowNum])
     
@@ -64,4 +87,4 @@ def test(rowNum=0):
     print(data['total_lvg_'].iloc[rowNum])
     '''
     
-#test(0)
+#test(2)

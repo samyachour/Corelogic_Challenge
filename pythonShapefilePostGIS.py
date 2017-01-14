@@ -31,7 +31,7 @@ def getPolygon(geomCol, table, idCol, rowNum):
 #getPolygon("geom", "public.topographical", "id", 0)
 
 
-# TODO make single column for parcel data too
+# TODO make single column for parcel data too?, make column for int point values for both parcels and topographical
 def getCentroids():
     engine = create_engine('postgresql://@localhost:5432/parcels')
     sql3 = """ALTER TABLE topographical ADD centroid GEOMETRY;"""
@@ -53,18 +53,19 @@ def getCentroids():
         engine.connect().execute(sql2)
     
     
-getCentroids()
+#getCentroids()
 
 
 def test(rowNum=0):
     engine = create_engine('postgresql://@localhost:5432/parcels')
     #sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal;'
-    #sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal WHERE "gid" < 7'
-    sql = 'SELECT *, ST_AsText("centroid") FROM public.topographical WHERE "id" < 5'
+    sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal WHERE "gid" < 7'
+    #sql = 'SELECT *, ST_AsText("centroid") FROM public.topographical WHERE "id" < 5'
     data = pd.read_sql(sql, engine)
     #print(data)
-    print(wkt.loads(data['st_astext'].iloc[rowNum]))
+    #print(wkt.loads(data['st_astext'].iloc[rowNum]))
     #print(type(data['geom'].iloc[rowNum]))
+    print(type(data['x_coord'].iloc[rowNum]))
     '''
     print(data['st_astext'].iloc[rowNum])
     
@@ -87,4 +88,4 @@ def test(rowNum=0):
     print(data['total_lvg_'].iloc[rowNum])
     '''
     
-#test(2)
+test(2)

@@ -21,7 +21,7 @@ def retrieveAerialImages(numRows):
     
     # Retreive aerial images using the google API
     for index, row in df.iterrows():
-        getImage(row["PARCEL LEVEL LATITUDE"], row["PARCEL LEVEL LONGITUDE"], "19", "400x400", STOP)
+        getImage(row["PARCEL LEVEL LATITUDE"], row["PARCEL LEVEL LONGITUDE"], "18", "400x400", STOP)
         STOP += 1
         if STOP >= numRows:
             break

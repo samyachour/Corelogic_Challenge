@@ -34,7 +34,39 @@ def getPolygon(geomCol, table, idCol, rowNum):
 
 # TODO make column for int point values for both parcels and topographical
 '''
-
+'''
+# this truncates the centroid xy a bit
+def getCentroids():
+    #sql4 = """ALTER TABLE topographical ADD x_coord decimal;"""
+    #sql5 = """ALTER TABLE topographical ADD y_coord decimal;"""
+    #sql6 = """ALTER TABLE topographical DROP y_coord;"""
+    #engine.connect().execute(sql4)
+    #engine.connect().execute(sql5)
+    
+    for i in range(1, 111689):
+    #for i in range(1, 3):
+        sql = 'SELECT *, ST_AsText("centroid") FROM public.topographical WHERE "id" = {};'.format(i)
+        data = pd.read_sql(sql, engine)
+        centroid = wkt.loads(data['st_astext'].iloc[0])
+        x = centroid.x
+        y = centroid.y
+        print(str(x) + " " + str(y))
+        sql2 = """
+        UPDATE public.topographical
+        SET x_coord = {}
+        WHERE id = {};
+        """.format(x, i)
+        sql3 = """
+        UPDATE public.topographical
+        SET y_coord = {}
+        WHERE id = {};
+        """.format(y, i)
+        engine.connect().execute(sql2)
+        engine.connect().execute(sql3)
+    
+    
+getCentroids()
+'''
     
     
 #getCentroids()

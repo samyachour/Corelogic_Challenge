@@ -51,10 +51,3 @@ def findNearestParcels(APN):
         plotMultiPolygon(shape)
 
 findNearestParcels("344-030-06-00")
-
-#2500 per day
-def getElevation(lat, long):
-    print()
-    
-getElevation(0, 0)
-

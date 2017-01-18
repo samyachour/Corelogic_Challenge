@@ -52,7 +52,7 @@ def Plot3DScatter(points):
         
     plt.show()
 
-Plot3DScatter(googleBox)
+#Plot3DScatter(googleBox)
 
 def Plot3DScatterSP(points):
     fig = plt.figure()
@@ -63,7 +63,7 @@ def Plot3DScatterSP(points):
         
     plt.show()
     
-Plot3DScatterSP(googleBox)
+#Plot3DScatterSP(googleBox)
 
 #MSDN ELevation
 
@@ -132,4 +132,4 @@ def getElevationGoogleBox(lat1, long1, lat2, long2, rows, cols):
     
     Plot3DScatter(points)
     
-#getElevationGoogleBox(33.074657, -117.207794, 33.074064, -117.206784, 10, 10)
+getElevationGoogleBox(33.074657, -117.207794, 33.074064, -117.206784, 10, 10)

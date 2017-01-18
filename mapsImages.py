@@ -14,14 +14,14 @@ def getImage(latitude, longitude, zoom, size, tag):
     del response
     
 #TEST getImage("33.796745", "-117.851196", "18", "400x400")
-
+# Adjust resolution and zoom to match with nearest parcels function
 def retrieveAerialImages(numRows):
     df = pandas.read_csv("../CorelogicResources/Corelogic_houses_csv.csv")
     STOP = 0
     
     # Retreive aerial images using the google API
     for index, row in df.iterrows():
-        getImage(row["PARCEL LEVEL LATITUDE"], row["PARCEL LEVEL LONGITUDE"], "18", "400x400", STOP)
+        getImage(row["PARCEL LEVEL LATITUDE"], row["PARCEL LEVEL LONGITUDE"], "18", "640x640", STOP)
         STOP += 1
         if STOP >= numRows:
             break
@@ -35,3 +35,4 @@ def retrieveAerialImages(numRows):
         cropped.save("img" + str(i) + ".png")
     
 retrieveAerialImages(3)
+

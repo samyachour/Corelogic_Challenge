@@ -30,6 +30,7 @@ def plotMultiPolygon(shape):
 
 #getPolygon("geom", "public.parcelterminal", "gid", 0)
 
+# Adjust parcel radius to match with google maps static image
 def findNearestParcels(APN):
     sql = 'SELECT * FROM public.parcelterminal WHERE "apn" = \'{}\';'.format(APN.replace("-", ""))
     parcel = pd.read_sql(sql, engine)

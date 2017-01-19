@@ -1,5 +1,7 @@
 import shutil
 import requests
+from io import StringIO
+import urllib
 import pandas
 from PIL import Image
 
@@ -10,9 +12,10 @@ from requests.utils import quote
 from skimage.measure import find_contours, points_in_poly, approximate_polygon
 from skimage import io
 from skimage import color
+from skimage.util import crop
 from threading import Thread
 
-import execjs
+import MercatorProjection
 
 def getImage(latitude, longitude, zoom, size, tag):
     # WITH SCALE url = 'https://maps.googleapis.com/maps/api/staticmap?center={0},{1}&zoom={2}&size={3}&scale=2&maptype=satellite&key=AIzaSyChqczf6qEYwqV7AxZlRvTYgMbnnpmoH6A'.format(latitude, longitude, zoom, size)
@@ -47,12 +50,13 @@ def retrieveAerialImages(numRows):
     
 #retrieveAerialImages(3)
 
-def getBuildingPolygons(lat, long, zoom, size):
+def getBuildingPolygons(lat, long, zoom, w, h):
     # Styled google maps url showing only the buildings
     style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off"
-    urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, size) + style + "&key=AIzaSyChqczf6qEYwqV7AxZlRvTYgMbnnpmoH6A"
-    
+    urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, str(w) + "x" + str(h)) + style + "&key=AIzaSyChqczf6qEYwqV7AxZlRvTYgMbnnpmoH6A"                                                             
+                                                                          
     imgBuildings = io.imread(urlBuildings)
+    imgBuildings = crop(imgBuildings, ((0, 22), (0, 0), (0, 0)))
     gray_imgBuildings = color.rgb2gray(imgBuildings)
     binary_imageBuildings = np.where(gray_imgBuildings > np.mean(gray_imgBuildings), 0.0, 1.0)
     contoursBuildings = find_contours(binary_imageBuildings, 0.1)
@@ -60,27 +64,27 @@ def getBuildingPolygons(lat, long, zoom, size):
     fig, ax = plt.subplots()
     ax.imshow(imgBuildings, interpolation='nearest', cmap=plt.cm.gray)
     
+    surroundingPolygons = []
+    
     for n, contour in enumerate(contoursBuildings):
         ax.plot(contour[:, 1], contour[:, 0], linewidth=2)
-        mainBuilding = approximate_polygon(contour, tolerance=2)
+        poly = approximate_polygon(contour, tolerance=2)
         
+        if len(poly) >= 4:
+            surroundingPolygons.append(poly)
+                
     ax.axis('image')
     ax.set_xticks([])
     ax.set_yticks([])
     plt.show()
     
-    print(mainBuilding)
+    print(surroundingPolygons[0][1])   
     
+    centerPoint = MercatorProjection.G_LatLng(lat, long)
+    corners = MercatorProjection.getCorners(centerPoint, zoom, w, h)
+    print(corners)
     
-getBuildingPolygons(33.167624126720625, -117.3294706444691, "18", "640x640")
-
-ctx = execjs.compile("""
-    function add(x, y) {
-        return x + y;
-    }
-                     """)
-
-print(ctx.call("add", 1, 2))
+getBuildingPolygons(33.167624126720625, -117.3294706444691, 19, 640, 640)
 
 # https://maps.googleapis.com/maps/api/staticmap?
 # size=512x512&zoom=15&center=Brooklyn

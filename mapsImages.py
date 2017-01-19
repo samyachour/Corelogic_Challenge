@@ -3,12 +3,16 @@ import requests
 import pandas
 from PIL import Image
 
+import matplotlib.pyplot as plt
+
 import numpy as np
 from requests.utils import quote
 from skimage.measure import find_contours, points_in_poly, approximate_polygon
 from skimage import io
 from skimage import color
 from threading import Thread
+
+import execjs
 
 def getImage(latitude, longitude, zoom, size, tag):
     # WITH SCALE url = 'https://maps.googleapis.com/maps/api/staticmap?center={0},{1}&zoom={2}&size={3}&scale=2&maptype=satellite&key=AIzaSyChqczf6qEYwqV7AxZlRvTYgMbnnpmoH6A'.format(latitude, longitude, zoom, size)
@@ -45,17 +49,38 @@ def retrieveAerialImages(numRows):
 
 def getBuildingPolygons(lat, long, zoom, size):
     # Styled google maps url showing only the buildings
-    style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0x000000%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off"
+    style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off"
     urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, size) + style + "&key=AIzaSyChqczf6qEYwqV7AxZlRvTYgMbnnpmoH6A"
-    print(urlBuildings)
     
     imgBuildings = io.imread(urlBuildings)
     gray_imgBuildings = color.rgb2gray(imgBuildings)
     binary_imageBuildings = np.where(gray_imgBuildings > np.mean(gray_imgBuildings), 0.0, 1.0)
     contoursBuildings = find_contours(binary_imageBuildings, 0.1)
+        
+    fig, ax = plt.subplots()
+    ax.imshow(imgBuildings, interpolation='nearest', cmap=plt.cm.gray)
+    
+    for n, contour in enumerate(contoursBuildings):
+        ax.plot(contour[:, 1], contour[:, 0], linewidth=2)
+        mainBuilding = approximate_polygon(contour, tolerance=2)
+        
+    ax.axis('image')
+    ax.set_xticks([])
+    ax.set_yticks([])
+    plt.show()
+    
+    print(mainBuilding)
     
     
-getBuildingPolygons(33.167624126720625, -117.3294706444691, "18", "400x400")
+getBuildingPolygons(33.167624126720625, -117.3294706444691, "18", "640x640")
+
+ctx = execjs.compile("""
+    function add(x, y) {
+        return x + y;
+    }
+                     """)
+
+print(ctx.call("add", 1, 2))
 
 # https://maps.googleapis.com/maps/api/staticmap?
 # size=512x512&zoom=15&center=Brooklyn

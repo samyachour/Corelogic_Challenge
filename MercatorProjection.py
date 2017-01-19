@@ -52,11 +52,11 @@ class MercatorProjection :
 
 
     def fromPointToLatLng(self,point) :
-          origin = self.pixelOrigin_
-          lng = (point.x - origin.x) / self.pixelsPerLonDegree_
-          latRadians = (point.y - origin.y) / -self.pixelsPerLonRadian_
-          lat = radiansToDegrees(2 * math.atan(math.exp(latRadians)) - math.pi / 2)
-          return G_LatLng(lat, lng)
+      origin = self.pixelOrigin_
+      lng = (point.x - origin.x) / self.pixelsPerLonDegree_
+      latRadians = (point.y - origin.y) / -self.pixelsPerLonRadian_
+      lat = radiansToDegrees(2 * math.atan(math.exp(latRadians)) - math.pi / 2)
+      return G_LatLng(lat, lng)
 
 #pixelCoordinate = worldCoordinate * pow(2,zoomLevel)
 
@@ -64,9 +64,9 @@ def getCorners(center, zoom, mapWidth, mapHeight):
     scale = 2**zoom
     proj = MercatorProjection()
     centerPx = proj.fromLatLngToPoint(center)
-    SWPoint = G_Point(centerPx.x-(mapWidth/2)/scale, centerPx.y+(mapHeight/2)/scale)
+    SWPoint = G_Point(centerPx.x-((mapWidth/2)/scale), centerPx.y+((mapHeight/2)/scale))
     SWLatLon = proj.fromPointToLatLng(SWPoint)
-    NEPoint = G_Point(centerPx.x+(mapWidth/2)/scale, centerPx.y-(mapHeight/2)/scale)
+    NEPoint = G_Point(centerPx.x+((mapWidth/2)/scale), centerPx.y-((mapHeight/2)/scale))
     NELatLon = proj.fromPointToLatLng(NEPoint)
     return {
         'N' : NELatLon.lat,
@@ -74,3 +74,11 @@ def getCorners(center, zoom, mapWidth, mapHeight):
         'S' : SWLatLon.lat,
         'W' : SWLatLon.lng,
     }
+    
+def getLatLng(center, zoom, xDiff, yDiff):
+    scale = 2**zoom
+    proj = MercatorProjection()
+    centerPx = proj.fromLatLngToPoint(center)
+    point = G_Point(centerPx.x+((xDiff)/scale), centerPx.y+((yDiff)/scale))
+    PLatLon = proj.fromPointToLatLng(point)
+    return "{},{}".format(PLatLon.lat, PLatLon.lng)

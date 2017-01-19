@@ -8,11 +8,13 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 import numpy as np
+#np.set_printoptions(threshold=np.nan)
 from requests.utils import quote
 from skimage.measure import find_contours, points_in_poly, approximate_polygon
 from skimage import io
 from skimage import color
 from skimage.util import crop
+from skimage import morphology
 from threading import Thread
 
 import MercatorProjection
@@ -52,7 +54,7 @@ def retrieveAerialImages(numRows):
 
 def getBuildingPolygons(lat, long, zoom, w, h):
     # Styled google maps url showing only the buildings
-    style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off"
+    style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:administrative.land_parcel%7Cvisibility:off"
     urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, str(w) + "x" + str(h)) + style + "&key=AIzaSyChqczf6qEYwqV7AxZlRvTYgMbnnpmoH6A"                                                             
                                                                           
     imgBuildings = io.imread(urlBuildings)
@@ -60,29 +62,42 @@ def getBuildingPolygons(lat, long, zoom, w, h):
     gray_imgBuildings = color.rgb2gray(imgBuildings)
     binary_imageBuildings = np.where(gray_imgBuildings > np.mean(gray_imgBuildings), 0.0, 1.0)
     contoursBuildings = find_contours(binary_imageBuildings, 0.1)
+    
+    #or i in range(len(gray_imgBuildings)):
+    #    for j in range(len(gray_imgBuildings[i])):
+    #        gray_imgBuildings[i, j] = 0.941176470588
         
     fig, ax = plt.subplots()
-    ax.imshow(imgBuildings, interpolation='nearest', cmap=plt.cm.gray)
+    ax.imshow(binary_imageBuildings, interpolation='nearest', cmap=plt.cm.gray)
     
     surroundingPolygons = []
     
+    
     for n, contour in enumerate(contoursBuildings):
-        ax.plot(contour[:, 1], contour[:, 0], linewidth=2)
-        poly = approximate_polygon(contour, tolerance=2)
+        #ax.plot(contour[:, 1], contour[:, 0], linewidth=2, color='b')
+        #poly = approximate_polygon(contour, tolerance=2)
         
-        if len(poly) >= 4:
-            surroundingPolygons.append(poly)
-                
+        coords = approximate_polygon(contour, tolerance=3)
+        if len(coords) >= 4:
+            ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=2)
+            surroundingPolygons.append(coords)
+    
+            
     ax.axis('image')
     ax.set_xticks([])
     ax.set_yticks([])
     plt.show()
     
-    print(surroundingPolygons[0][1])   
-    
+    '''
     centerPoint = MercatorProjection.G_LatLng(lat, long)
     corners = MercatorProjection.getCorners(centerPoint, zoom, w, h)
-    print(corners)
+    
+    for i in surroundingPolygons[4]:
+        xDiff = i[0]-320
+        yDiff = i[1] - 320
+        point = MercatorProjection.getLatLng(centerPoint, zoom, xDiff, yDiff)
+        print(point)
+    '''
     
 getBuildingPolygons(33.167624126720625, -117.3294706444691, 19, 640, 640)
 

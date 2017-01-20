@@ -62,10 +62,6 @@ def getBuildingPolygons(lat, long, zoom, w, h):
     gray_imgBuildings = color.rgb2gray(imgBuildings)
     binary_imageBuildings = np.where(gray_imgBuildings > np.mean(gray_imgBuildings), 0.0, 1.0)
     contoursBuildings = find_contours(binary_imageBuildings, 0.1)
-    
-    #or i in range(len(gray_imgBuildings)):
-    #    for j in range(len(gray_imgBuildings[i])):
-    #        gray_imgBuildings[i, j] = 0.941176470588
         
     fig, ax = plt.subplots()
     ax.imshow(binary_imageBuildings, interpolation='nearest', cmap=plt.cm.gray)
@@ -74,13 +70,19 @@ def getBuildingPolygons(lat, long, zoom, w, h):
     
     
     for n, contour in enumerate(contoursBuildings):
-        #ax.plot(contour[:, 1], contour[:, 0], linewidth=2, color='b')
-        #poly = approximate_polygon(contour, tolerance=2)
         
-        coords = approximate_polygon(contour, tolerance=3)
+        coords = approximate_polygon(contour, tolerance=3.5)
         if len(coords) >= 4:
-            ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=2)
-            surroundingPolygons.append(coords)
+            # TO make sure we don't get house polygons that are cut off
+            if not any(0.0 in subl for subl in coords):
+                if not any(639.0 in subl for subl in coords):
+                    yValues = []
+                    for i in coords:
+                        yValues.append(i[0])
+                    #because we cropped the image, 640-22 = 618
+                    if 617.0 not in yValues:
+                        ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=2)
+                        surroundingPolygons.append(coords)
     
             
     ax.axis('image')
@@ -88,18 +90,13 @@ def getBuildingPolygons(lat, long, zoom, w, h):
     ax.set_yticks([])
     plt.show()
     
-    '''
     centerPoint = MercatorProjection.G_LatLng(lat, long)
-    corners = MercatorProjection.getCorners(centerPoint, zoom, w, h)
+        
+    for i in surroundingPolygons[1]:
+        point = MercatorProjection.G_Point(i[1], i[0])
+        point = MercatorProjection.point2LatLng(centerPoint, zoom, w, h, point)
     
-    for i in surroundingPolygons[4]:
-        xDiff = i[0]-320
-        yDiff = i[1] - 320
-        point = MercatorProjection.getLatLng(centerPoint, zoom, xDiff, yDiff)
-        print(point)
-    '''
-    
-getBuildingPolygons(33.167624126720625, -117.3294706444691, 19, 640, 640)
+#getBuildingPolygons(33.167624126720625, -117.3294706444691, 19, 640, 640)
 
 # https://maps.googleapis.com/maps/api/staticmap?
 # size=512x512&zoom=15&center=Brooklyn

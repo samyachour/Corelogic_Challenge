@@ -91,15 +91,16 @@ def getBuildingPolygons(lat, long, zoom, w, h):
     '''
     
     centerPoint = MercatorProjection.G_LatLng(lat, long)
-    
     housePolygons = []
         
     for i in surroundingPolygons:
+        coords = []
         for j in i:
             point = MercatorProjection.G_Point(j[1], j[0])
             point = MercatorProjection.point2LatLng(centerPoint, zoom, w, h, point)
             point = elev.convertLLSP(point[0], point[1])
-            housePolygons.append(point)
+            coords.append(point)
+        housePolygons.append(coords)
             
     return housePolygons
     

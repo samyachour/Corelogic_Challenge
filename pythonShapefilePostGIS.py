@@ -1,14 +1,8 @@
 from sqlalchemy import create_engine
 import pandas as pd
 from shapely import wkt
-from shapely.geometry import Polygon
 from matplotlib import pyplot as plt
-from descartes.patch import PolygonPatch
-from figures import BLUE, SIZE, plot_coords, color_isvalid
-# TODO: check for xy coords, exclude multi's?
 
-import mapsImages as mimg
-import Elevation as elev
 import numpy as np
 np.set_printoptions(threshold=np.nan)
 pd.set_option('display.max_columns', 500)
@@ -20,25 +14,8 @@ def getPolygon(geomCol, table, idCol, rowNum):
     data = pd.read_sql(sql, engine)
     #print(data['st_astext'].iloc[rowNum])
     
-    
     shape = wkt.loads(data['st_astext'].iloc[rowNum])
-    plotMultiPolygon(shape)
-        
-def plotMultiPolygon(shape):
-    fig = plt.figure(1, figsize=SIZE, dpi=90)
-    ax = fig.add_subplot(121)
-    if str(type(shape)) == "<class 'shapely.geometry.multipolygon.MultiPolygon'>":
-        for polygon in shape:
-            plot_coords(ax, polygon.exterior, alpha=0)
-            patch = PolygonPatch(polygon, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), alpha=0.5, zorder=2)
-            ax.add_patch(patch)
-    
-    if str(type(shape)) == "<class 'shapely.geometry.polygon.Polygon'>":
-        plot_coords(ax, shape.exterior, alpha=0)
-        patch = PolygonPatch(shape, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), alpha=0.5, zorder=2)
-        ax.add_patch(patch)
-        
-    ax.set_title('Polygon')
+    return shape
     
 #getPolygon("geom", "public.parcelterminal", "gid", 0)
 
@@ -71,86 +48,3 @@ def findNearestParcels(APN):
     #surroundingParcels['shape'] = pd.Series(nearestParcels)
     '''
     return surroundingParcels
-    
-
-df = pd.read_csv("../CorelogicResources/Corelogic_houses_csv.csv")
-house = df.iloc[0] # APN = 344-030-06-00    32.8721, -117.249 2425    2425 Ellentown rd, La Jolla, CA
-
-latitude = house['PARCEL LEVEL LATITUDE']
-longitude = house['PARCEL LEVEL LONGITUDE']
-nearestParcelsData = findNearestParcels(house['FORMATTED APN'])
-#print(nearestParcels)
-
-nearestParcels = mimg.getBuildingPolygons(latitude, longitude, 18, 640, 640, "parcels")
-nearestParcelsDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["Polygon"])
-idx = 0
-
-for i in nearestParcels:
-    nearestParcelsDF.set_value(idx, "Polygon", Polygon(i))
-    idx += 1
-    
-nearestParcelsDF['x_coord'] = 0.000000000
-nearestParcelsDF['y_coord'] = 0.000000000
-nearestParcelsDF['area'] = 0.000000000                
-
-for index, row in nearestParcelsDF.iterrows():
-    nearestParcelsDF.set_value(index, "x_coord", row['Polygon'].centroid.x)
-    nearestParcelsDF.set_value(index, "y_coord", row['Polygon'].centroid.y)
-    nearestParcelsDF.set_value(index, "area", row['Polygon'].area)    
-    
-    
-
-#houseParcel = nearestParcels.loc[nearestParcels['apn'] == house['FORMATTED APN'].replace("-", "")]
-# HOUSE LAT LONG we care about
-#comes as SP, need to convert to polygons
-nearestPolygons = mimg.getBuildingPolygons(latitude, longitude, 18, 640, 640, "houses")
-nearestPolygonsDF = pd.DataFrame(index=range(0, len(nearestPolygons)), columns=["Polygon"])
-idx = 0
-
-for i in nearestPolygons:
-    nearestPolygonsDF.set_value(idx, "Polygon", Polygon(i))
-    idx += 1
-
-nearestPolygonsDF['x_coord'] = 0.000000000
-nearestPolygonsDF['y_coord'] = 0.000000000
-nearestPolygonsDF['area'] = 0.000000000                
-
-for index, row in nearestPolygonsDF.iterrows():
-    nearestPolygonsDF.set_value(index, "x_coord", row['Polygon'].centroid.x)
-    nearestPolygonsDF.set_value(index, "y_coord", row['Polygon'].centroid.y)
-    nearestPolygonsDF.set_value(index, "area", row['Polygon'].area)
-
-#print(nearestPolygonsDF)
-#print(nearestPolygons)
-
-#6.254550, 1.898823, 8485.24  7146
-#6.255281 1.898643   3389.342628  3564
-
-
-#Box: 32.873320, -117.250975 to 32.871759, -117.248062
-#print(elev.getElevationGoogleBox(latitude + 0.0015, longitude + 0.0015, latitude - 0.0015, longitude - 0.0015, 25, 25))
-#comes as lat long, need to convert to SP
-elevationPoints_ = elev.elevationPoints
-elevationPoints = []
-
-for point in elevationPoints_:
-    sp = elev.convertLLSP(point[0], point[1])
-    elevationPoints.append((sp[0], sp[1], point[2]))
-
-#so we have nearestParcelsDF, nearestParcelsData, house, lat/long, nearestPolygonsDF, and elevationPoints all in SP
-
-for index, row in nearestParcelsDF.iterrows():
-    shape = row['Polygon']
-    plotMultiPolygon(shape)  
-
-for index, row in nearestPolygonsDF.iterrows():
-    shape = row['Polygon']
-    plotMultiPolygon(shape)
-
-'''
-for index, row in nearestParcelsData.iterrows():
-    shape = wkt.loads(row['st_astext'])
-    plotMultiPolygon(shape)
-'''
-
-

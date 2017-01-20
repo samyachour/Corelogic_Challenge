@@ -1,7 +1,5 @@
 import shutil
 import requests
-from io import StringIO
-import urllib
 import pandas
 from PIL import Image
 
@@ -9,13 +7,10 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 #np.set_printoptions(threshold=np.nan)
-from requests.utils import quote
-from skimage.measure import find_contours, points_in_poly, approximate_polygon
+from skimage.measure import find_contours, approximate_polygon
 from skimage import io
 from skimage import color
 from skimage.util import crop
-from skimage import morphology
-from threading import Thread
 
 import MercatorProjection
 import Elevation as elev

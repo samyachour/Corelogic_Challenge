@@ -18,6 +18,7 @@ from skimage import morphology
 from threading import Thread
 
 import MercatorProjection
+import Elevation as elev
 
 def getImage(latitude, longitude, zoom, size, tag):
     # WITH SCALE url = 'https://maps.googleapis.com/maps/api/staticmap?center={0},{1}&zoom={2}&size={3}&scale=2&maptype=satellite&key=AIzaSyChqczf6qEYwqV7AxZlRvTYgMbnnpmoH6A'.format(latitude, longitude, zoom, size)
@@ -53,7 +54,6 @@ def retrieveAerialImages(numRows):
 #retrieveAerialImages(3)
 
 def getBuildingPolygons(lat, long, zoom, w, h):
-    # Styled google maps url showing only the buildings
     style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:administrative.land_parcel%7Cvisibility:off"
     urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, str(w) + "x" + str(h)) + style + "&key=AIzaSyChqczf6qEYwqV7AxZlRvTYgMbnnpmoH6A"                                                             
                                                                           
@@ -63,11 +63,10 @@ def getBuildingPolygons(lat, long, zoom, w, h):
     binary_imageBuildings = np.where(gray_imgBuildings > np.mean(gray_imgBuildings), 0.0, 1.0)
     contoursBuildings = find_contours(binary_imageBuildings, 0.1)
         
-    fig, ax = plt.subplots()
-    ax.imshow(binary_imageBuildings, interpolation='nearest', cmap=plt.cm.gray)
+    #fig, ax = plt.subplots()
+    #ax.imshow(binary_imageBuildings, interpolation='nearest', cmap=plt.cm.gray)
     
     surroundingPolygons = []
-    
     
     for n, contour in enumerate(contoursBuildings):
         
@@ -81,20 +80,28 @@ def getBuildingPolygons(lat, long, zoom, w, h):
                         yValues.append(i[0])
                     #because we cropped the image, 640-22 = 618
                     if 617.0 not in yValues:
-                        ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=2)
+                        #ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=2)
                         surroundingPolygons.append(coords)
     
-            
+    '''        
     ax.axis('image')
     ax.set_xticks([])
     ax.set_yticks([])
     plt.show()
+    '''
     
     centerPoint = MercatorProjection.G_LatLng(lat, long)
+    
+    housePolygons = []
         
-    for i in surroundingPolygons[1]:
-        point = MercatorProjection.G_Point(i[1], i[0])
-        point = MercatorProjection.point2LatLng(centerPoint, zoom, w, h, point)
+    for i in surroundingPolygons:
+        for j in i:
+            point = MercatorProjection.G_Point(j[1], j[0])
+            point = MercatorProjection.point2LatLng(centerPoint, zoom, w, h, point)
+            point = elev.convertLLSP(point[0], point[1])
+            housePolygons.append(point)
+            
+    return housePolygons
     
 #getBuildingPolygons(33.167624126720625, -117.3294706444691, 19, 640, 640)
 

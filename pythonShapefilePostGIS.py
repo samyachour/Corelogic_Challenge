@@ -7,6 +7,9 @@ from descartes.patch import PolygonPatch
 from figures import BLUE, SIZE, plot_coords, color_isvalid
 # TODO: check for xy coords, exclude multi's?
 
+import mapsImages as mimg
+import Elevation as elev
+
 engine = create_engine('postgresql://@localhost:5432/parcels')
 
 def getPolygon(geomCol, table, idCol, rowNum):
@@ -51,4 +54,5 @@ def findNearestParcels(APN):
         shape = wkt.loads(row['st_astext'])
         plotMultiPolygon(shape)
 
-findNearestParcels("344-030-06-00")
+#findNearestParcels("344-030-06-00")
+    

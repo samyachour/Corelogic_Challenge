@@ -76,4 +76,4 @@ def point2LatLng(center, zoom, mapWidth, mapHeight, point):
     bottomLeft = getCorners(center, zoom, mapWidth, mapHeight)[1]
     scale = 2**zoom
     point = proj.fromPointToLatLng(G_Point(point.x/scale + bottomLeft.x, point.y/scale + topRight.y))
-    return "{},{}".format(point.lat, point.lng) 
+    return (point.lat, point.lng) 

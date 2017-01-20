@@ -1,9 +1,5 @@
-from mpl_toolkits.mplot3d import Axes3D
 import requests
-import json
-import stateplane
 import pyproj
-from matplotlib import cm
 import matplotlib.pyplot as plt
 
 def convertSPLL(x, y):

@@ -53,9 +53,11 @@ def retrieveAerialImages(numRows):
     
 #retrieveAerialImages(3)
 
-def getBuildingPolygons(lat, long, zoom, w, h):
-    style = "feature:administrative.land_parcel%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:landscape.man_made%7Cvisibility:off"
-    #style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:administrative.land_parcel%7Cvisibility:off"
+def getBuildingPolygons(lat, long, zoom, w, h, polys):
+    if polys == "houses":
+        style = "feature:administrative.land_parcel%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:landscape.man_made%7Cvisibility:off"
+    if polys == "parcels":    
+        style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:administrative.land_parcel%7Cvisibility:off"
     urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, str(w) + "x" + str(h)) + style + "&key=AIzaSyChqczf6qEYwqV7AxZlRvTYgMbnnpmoH6A"                                                             
                                                                           
     imgBuildings = io.imread(urlBuildings)
@@ -108,8 +110,8 @@ def getBuildingPolygons(lat, long, zoom, w, h):
             
     return housePolygons
     
-#getBuildingPolygons(33.167624126720625, -117.3294706444691, 18, 640, 640)
-getBuildingPolygons(32.8721, -117.249, 18, 640, 640)
+#getBuildingPolygons(33.167624126720625, -117.3294706444691, 18, 640, 640, "houses")
+#getBuildingPolygons(32.8721, -117.249, 18, 640, 640, "parcels")
 
 # https://maps.googleapis.com/maps/api/staticmap?
 # size=512x512&zoom=15&center=Brooklyn

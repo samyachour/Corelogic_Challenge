@@ -65,9 +65,9 @@ def getCorners(center, zoom, mapWidth, mapHeight):
     proj = MercatorProjection()
     centerPx = proj.fromLatLngToPoint(center)
     SWPoint = G_Point(centerPx.x-((mapWidth/2)/scale), centerPx.y+((mapHeight/2)/scale))
-    SWLatLon = proj.fromPointToLatLng(SWPoint)
+    #SWLatLon = proj.fromPointToLatLng(SWPoint)
     NEPoint = G_Point(centerPx.x+((mapWidth/2)/scale), centerPx.y-((mapHeight/2)/scale))
-    NELatLon = proj.fromPointToLatLng(NEPoint)
+    #NELatLon = proj.fromPointToLatLng(NEPoint)
     return (NEPoint, SWPoint)
     
 def point2LatLng(center, zoom, mapWidth, mapHeight, point):

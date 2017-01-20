@@ -62,9 +62,11 @@ def getBuildingPolygons(lat, long, zoom, w, h):
     gray_imgBuildings = color.rgb2gray(imgBuildings)
     binary_imageBuildings = np.where(gray_imgBuildings > np.mean(gray_imgBuildings), 0.0, 1.0)
     contoursBuildings = find_contours(binary_imageBuildings, 0.1)
-        
-    #fig, ax = plt.subplots()
-    #ax.imshow(binary_imageBuildings, interpolation='nearest', cmap=plt.cm.gray)
+       
+    '''
+    fig, ax = plt.subplots()
+    ax.imshow(binary_imageBuildings, interpolation='nearest', cmap=plt.cm.gray)
+    '''
     
     surroundingPolygons = []
     
@@ -83,12 +85,13 @@ def getBuildingPolygons(lat, long, zoom, w, h):
                         #ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=2)
                         surroundingPolygons.append(coords)
     
-    '''        
+    '''       
     ax.axis('image')
     ax.set_xticks([])
     ax.set_yticks([])
     plt.show()
     '''
+    
     
     centerPoint = MercatorProjection.G_LatLng(lat, long)
     housePolygons = []

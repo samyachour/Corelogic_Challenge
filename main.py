@@ -113,9 +113,13 @@ for index, row in nearestParcelsData.iterrows():
 # We want to compare the nearestPolygonsDF area with the TOTAL_LVG_ in nearestParcelsData to find height
 # We want to grab the NearestPolygonsDF, and query the nearestParcelsData
 
-test = nearestPolygonsDF.iloc[0]
-areas = [test['area'], 0.0000]
+# TODO: Need to get rid of weird small shapes
+
+test = nearestPolygonsDF.iloc[23]
+areas = [test['area'], 0.0000, 0.0000]
 shapes = [test['Polygon'], test['Polygon']]
+address = ""
+rooms = ""
 x = test['x_coord']
 y = test['y_coord']
 x1 = 0
@@ -126,13 +130,21 @@ for index, row in nearestParcelsData.iterrows():
         x1 = row['x_coord']
         y1 = row['y_coord']
         areas[1] = row['total_lvg_']
+        areas[2] = row['usable_sq_']
         shapes[1] = wkt.loads(row['st_astext'])
+        address = str(row['situs_addr']) + row['situs_stre']  + row['situs_suff']
+        rooms = "Bedrooms: " + str(row['bedrooms']) + "Bathrooms: " + str(row['baths'])
 
 print(areas)
-plotMultiPolygon(shapes[0])
+print(address)
+print(rooms)
 plotMultiPolygon(shapes[1])
+plotMultiPolygon(shapes[0])
 
-
+#2 floor [8715.9612437501291, 7146.0]
+#2 floor [2280.9014476399416, 3651.0]
+#1 floor [3833.8454037876486, 2896.0]
+#  floor [4527.5253663063086, 3564.0]
 
 
 

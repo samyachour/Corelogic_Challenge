@@ -13,6 +13,8 @@ import numpy as np
 np.set_printoptions(threshold=np.nan)
 pd.set_option('display.max_columns', 500)
 
+from pyzillow.pyzillow import ZillowWrapper, GetDeepSearchResults
+
 def plotMultiPolygon(shape):
     fig = plt.figure(1, figsize=SIZE, dpi=90)
     ax = fig.add_subplot(121)
@@ -30,7 +32,7 @@ def plotMultiPolygon(shape):
     ax.set_title('Polygon')
 
 coreLogic = pd.read_csv("../CorelogicResources/Corelogic_houses_csv.csv")
-house = coreLogic.iloc[0] # APN = 344-030-06-00    32.8721, -117.249 2425    2425 Ellentown rd, La Jolla, CA
+house = coreLogic.iloc[45982] # numbers loc - 2   0 is APN = 344-030-06-00    32.8721, -117.249 2425    2425 Ellentown rd, La Jolla, CA
 
 latitude = house['PARCEL LEVEL LATITUDE']
 longitude = house['PARCEL LEVEL LONGITUDE']
@@ -113,12 +115,17 @@ for index, row in nearestParcelsData.iterrows():
 # We want to compare the nearestPolygonsDF area with the TOTAL_LVG_ in nearestParcelsData to find height
 # We want to grab the NearestPolygonsDF, and query the nearestParcelsData
 
-# TODO: Need to get rid of weird small shapes
+# TODO: ignore weird small shapes 0 22, 0 7, 0 5 (better)
+# TODO: ignore apartment buildings/condos 2742 0
+# TODO: ignore shapes that don't overlap 45982 0-4
+# TODO: deal with shapes touching 0 3
+# TODO: deal with empty parcel data total_lvg 45982 8
 
-test = nearestPolygonsDF.iloc[23]
+test = nearestPolygonsDF.iloc[19]
 areas = [test['area'], 0.0000, 0.0000]
 shapes = [test['Polygon'], test['Polygon']]
 address = ""
+zipcode = 0
 rooms = ""
 x = test['x_coord']
 y = test['y_coord']
@@ -132,7 +139,8 @@ for index, row in nearestParcelsData.iterrows():
         areas[1] = row['total_lvg_']
         areas[2] = row['usable_sq_']
         shapes[1] = wkt.loads(row['st_astext'])
-        address = str(row['situs_addr']) + row['situs_stre']  + row['situs_suff']
+        address = str(int(row['situs_addr'])) + " " + row['situs_stre'] + " " +  row['situs_suff']
+        zipcode = row['own_zip']
         rooms = "Bedrooms: " + str(row['bedrooms']) + "Bathrooms: " + str(row['baths'])
 
 print(areas)
@@ -141,13 +149,16 @@ print(rooms)
 plotMultiPolygon(shapes[1])
 plotMultiPolygon(shapes[0])
 
-#2 floor [8715.9612437501291, 7146.0]
-#2 floor [2280.9014476399416, 3651.0]
-#1 floor [3833.8454037876486, 2896.0]
-#  floor [4527.5253663063086, 3564.0]
+# 45982
+# 5: 2 floors 1039.788362172010, 1408.0
+# 6: 1 floor 2064.6996684360101, 1162.0
+# 7: 1/2 1 floor, 1/2 2 floors, 2587.0305508661154, 2196.0
+# 13: 1 floor, 1078.0723589012371, 1031.0
 
+# 15: 1 floor, 1123.2520837836387, 1044.0
+# 16: 1 floor, 1676.7780576678415, 1496.0
 
-
-
-
-
+zillow_data = ZillowWrapper("X1-ZWz1fm3nv90ft7_aovt1")
+deep_search_response = zillow_data.get_deep_search_results(address, zipcode)
+result = GetDeepSearchResults(deep_search_response)
+print(result.home_size)

@@ -32,7 +32,7 @@ def plotMultiPolygon(shape):
     ax.set_title('Polygon')
 
 coreLogic = pd.read_csv("../CorelogicResources/Corelogic_houses_csv.csv")
-house = coreLogic.iloc[45982] # numbers loc - 2   0 is APN = 344-030-06-00    32.8721, -117.249 2425    2425 Ellentown rd, La Jolla, CA
+house = coreLogic.iloc[0] # numbers loc - 2   0 is APN = 344-030-06-00    32.8721, -117.249 2425    2425 Ellentown rd, La Jolla, CA
 
 latitude = house['PARCEL LEVEL LATITUDE']
 longitude = house['PARCEL LEVEL LONGITUDE']
@@ -115,13 +115,11 @@ for index, row in nearestParcelsData.iterrows():
 # We want to compare the nearestPolygonsDF area with the TOTAL_LVG_ in nearestParcelsData to find height
 # We want to grab the NearestPolygonsDF, and query the nearestParcelsData
 
-# TODO: ignore weird small shapes 0 22, 0 7, 0 5 (better)
-# TODO: ignore apartment buildings/condos 2742 0
-# TODO: ignore shapes that don't overlap 45982 0-4
-# TODO: deal with shapes touching 0 3
+
+# TODO: deal with shapes touching 0 3, 45982 25-26
 # TODO: deal with empty parcel data total_lvg 45982 8
 
-test = nearestPolygonsDF.iloc[19]
+test = nearestPolygonsDF.iloc[5]
 areas = [test['area'], 0.0000, 0.0000]
 shapes = [test['Polygon'], test['Polygon']]
 address = ""
@@ -141,13 +139,13 @@ for index, row in nearestParcelsData.iterrows():
         shapes[1] = wkt.loads(row['st_astext'])
         address = str(int(row['situs_addr'])) + " " + row['situs_stre'] + " " +  row['situs_suff']
         zipcode = row['own_zip']
-        rooms = "Bedrooms: " + str(row['bedrooms']) + "Bathrooms: " + str(row['baths'])
+        rooms = "Bedrooms: " + str(row['bedrooms']) + " Bathrooms: " + str(row['baths'])
 
-print(areas)
-print(address)
-print(rooms)
-plotMultiPolygon(shapes[1])
-plotMultiPolygon(shapes[0])
+#print(areas)
+#print(address)
+#print(rooms)
+#plotMultiPolygon(shapes[1])
+#plotMultiPolygon(shapes[0])
 
 # 45982
 # 5: 2 floors 1039.788362172010, 1408.0
@@ -157,8 +155,109 @@ plotMultiPolygon(shapes[0])
 
 # 15: 1 floor, 1123.2520837836387, 1044.0
 # 16: 1 floor, 1676.7780576678415, 1496.0
+# 18: 2 floor multi family home, 2110.6818553984103, 3914.0, 20: 1 floor 1250.973252139639, 3914.0
+# 19: 2 floor, 2589.6529427557743, 3572.0
+# 21: 2 floor, 2713.5604145914681, 3880.0
+# 23: 2 floor, 2248.3910607346897, 3750.0
+# 24: 1 floor w/ a little 2 floor 2267.8726233511466, 1968.0
+# 25: 2 floor 3044.4359396621044, 3100 (zillow)
 
 zillow_data = ZillowWrapper("X1-ZWz1fm3nv90ft7_aovt1")
 deep_search_response = zillow_data.get_deep_search_results(address, zipcode)
 result = GetDeepSearchResults(deep_search_response)
-print(result.home_size)
+#print("Home size: " + str(result.home_size) + " " + str(result.home_type) + " Bedrooms: " + str(result.bedrooms) + " Bathrooms: " + str(result.bathrooms))
+
+'''
+so we have nearestParcelsDF, nearestParcelsData, house, lat/long, nearestPolygonsDF, and elevationPoints (all in SP)
+'''
+'''
+TODO: Take bigger size between parcel data and zillow
+      output a data frame with the polygons for the surrounding parcels+houses and their floor #, specific house parcel
+      output list of elevationpoints in stateplane
+'''
+
+returnDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["APN", "Parcel", "House", "Floors", "Address", "SqFtDelta", "Bed/Bath", "Type", "Chosen"])
+
+for index, row in nearestPolygonsDF.iterrows():
+    mapArea = row['area']
+    mapShape = row['Polygon']
+    parcelShape = row['Polygon']
+    
+    x1 = 0
+    y1 = 0
+    apn = 0
+        
+    # make sure we don't have some small weird shape
+    if mapArea < 150:
+        continue
+    
+    for index1, row1 in nearestParcelsData.iterrows():
+        if (abs(row1['x_coord'] - row['x_coord']) + abs(row1['y_coord'] - row['y_coord'])) < (abs(x1 - row['x_coord']) + abs(y1 - row['y_coord'])):
+            apn = row1['apn']
+            x1 = row1['x_coord']
+            y1 = row1['y_coord']
+            parcelShape = wkt.loads(row1['st_astext'])
+            '''
+            areas[1] = row['total_lvg_']
+            areas[2] = row['usable_sq_']
+            shapes[1] = wkt.loads(row['st_astext'])
+            address = str(int(row['situs_addr'])) + " " + row['situs_stre'] + " " +  row['situs_suff']
+            zipcode = row['own_zip']
+            rooms = "Bedrooms: " + str(row['bedrooms']) + " Bathrooms: " + str(row['baths'])
+            '''
+    x1 = 0
+    y1 = 0
+    
+    for index1, row1 in nearestParcelsDF.iterrows():
+        if (abs(row1['x_coord'] - row['x_coord']) + abs(row1['y_coord'] - row['y_coord'])) < (abs(x1 - row['x_coord']) + abs(y1 - row['y_coord'])):
+            x1 = row1['x_coord']
+            y1 = row1['y_coord']
+     
+    # Make sure house polygon is on parcel polygon
+    parcelData = nearestParcelsData.loc[nearestParcelsData['apn'] == apn].iloc[0]
+    if not mapShape.intersects(wkt.loads(parcelData['st_astext'])):
+        continue
+    
+    #Only one polygon per parcel, also getting zillow data while catching for weird rows
+    address = str(int(parcelData['situs_addr'])) + " " + parcelData['situs_stre'] + " " +  parcelData['situs_suff']
+    returnDF.set_value(index, "Address", address)
+    zipcode = parcelData['own_zip']
+    try:
+        deep_search_response = zillow_data.get_deep_search_results(address, zipcode)
+        result = GetDeepSearchResults(deep_search_response)
+    except:
+        print("Zillow couldn't find this house")
+    else:
+        if not returnDF.loc[returnDF['APN'] == apn].empty:
+            selectedRow = returnDF.loc[returnDF['APN'] == apn].iloc[0]
+            # takes care of condos and multi family
+            if not selectedRow['House'] and result.home_type == "SingleFamily":
+                continue
+            if not selectedRow['House'] and result.home_type != "SingleFamily":
+                returnDF.set_value(index, "House", [selectedRow['House'], mapShape])
+        
+        returnDF.set_value(index, "APN", apn)
+        if apn == house['FORMATTED APN'].replace("-", ""):
+            returnDF.set_value(index, "Chosen", True)
+        else:
+            returnDF.set_value(index, "Chosen", False)
+    
+        nearestMapParcel = nearestParcelsDF.loc[nearestParcelsDF['x_coord'] == x1].iloc[0]
+        returnDF.set_value(index, "Parcel", nearestMapParcel['Polygon'])
+    
+        returnDF.set_value(index, "House", [mapShape])
+        test = returnDF.loc[returnDF['APN'] == apn].iloc[0]
+        #print(test['House'].empty)
+
+        returnDF.set_value(index, "Type", (result.home_type, parcelData['nucleus_zo']))
+        returnDF.set_value(index, "Bed/Bath", (result.bedrooms, result.bathrooms, parcelData['bedrooms'], parcelData['baths']))
+        if result.home_size != None:
+            returnDF.set_value(index, "SqFtDelta", [mapArea, max(int(result.home_size), int(parcelData['total_lvg_']))])
+        else:
+            returnDF.set_value(index, "SqFtDelta", [mapArea, parcelData['total_lvg_']])
+     
+    # if zillow couldn't find the house        
+        
+returnDF.to_csv('out.csv')
+
+# analyze dataframe to find floors, make sure to add up polygons for condos or multi family

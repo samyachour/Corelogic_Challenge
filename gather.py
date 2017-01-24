@@ -78,9 +78,10 @@ def getData(row):
         elevationPoints.append((sp[0], sp[1], point[2]))
         
     # TODO: deal with shapes touching 0 3, 45982 25-26
+    # TODO: deal with border houses that still barely touch a parcel (plot 45982), they don't matter cause they're far away fron chosen house
     
+    """
     # Testing
-    
     test = nearestPolygonsDF.iloc[11]
     areas = [test['area'], 0.0000, 0.0000]
     shapes = [test['Polygon'], test['Polygon']]
@@ -108,9 +109,9 @@ def getData(row):
     print(rooms)
     plotMultiPolygon(shapes[1])
     plotMultiPolygon(shapes[0])
+    """
     
     
-    '''
     zillow_data = ZillowWrapper("X1-ZWz19ed1y70qh7_1zmzq")
     
     """
@@ -126,7 +127,8 @@ def getData(row):
     #so we have nearestParcelsDF, nearestParcelsData, house, lat/long, nearestPolygonsDF, and elevationPoints (all in SP)
     
     # Works around condos/multi family by adding polygons, works around small weird random polygons, works around non-intersecting house/parcel
-    returnDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["APN", "Parcel", "House", "Floors", "Address", "SqFtDelta", "Bed/Bath", "Type", "Value", "Chosen"])
+    # Modular so the zillow api failing only affects the type column, ('SingleFamily', 10) to 10
+    returnDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["APN", "Parcel", "House", "Floors", "Address", "SqFtDelta", "Bed/Bath", "Type", "Value", "ParcelSqFt","Chosen"])
     
     for index, row in nearestPolygonsDF.iterrows():
         mapArea = row['area']
@@ -160,6 +162,15 @@ def getData(row):
         if not mapShape.intersects(wkt.loads(parcelData['st_astext'])):
             continue
         
+        if not returnDF.loc[returnDF['APN'] == apn].empty:
+                selectedRow = returnDF.loc[returnDF['APN'] == apn]
+                index1 = selectedRow.index[0]
+                selectedRow = selectedRow.iloc[0]
+                # Adding up polygon area if they share a parcel
+                returnDF.set_value(index1, "House", selectedRow['House'] + [mapShape]) 
+                returnDF.set_value(index1, "SqFtDelta", [selectedRow['SqFtDelta'][0] + mapArea, selectedRow['SqFtDelta'][1]]) 
+                continue
+        
         #Only one polygon per parcel, also getting zillow data while catching for weird rows
         address = str(int(parcelData['situs_addr'])) + " " + parcelData['situs_stre'] + " " +  parcelData['situs_suff']
         zipcode = parcelData['own_zip']
@@ -167,27 +178,13 @@ def getData(row):
             deep_search_response = zillow_data.get_deep_search_results(address, zipcode)
             result = GetDeepSearchResults(deep_search_response)
         except:        
-            # if zillow couldn't find the house        
-    
-            if not returnDF.loc[returnDF['APN'] == apn].empty:
-                selectedRow = returnDF.loc[returnDF['APN'] == apn]
-                index1 = selectedRow.index[0]
-                selectedRow = selectedRow.iloc[0]
-                returnDF.set_value(index1, "House", selectedRow['House'] + [mapShape]) 
-                returnDF.set_value(index1, "SqFtDelta", [selectedRow['SqFtDelta'][0] + mapArea, selectedRow['SqFtDelta'][1]]) 
-                continue
-                """
-                # takes care of condos and multi family
-                if selectedRow['House'] and parcelData['nucleus_zo'] == "10":
-                    continue
-                if selectedRow['House'] and parcelData['nucleus_zo'] != "10":
-                    returnDF.set_value(index, "House", selectedRow['House'].append(mapShape)) 
-                    continue
-                """
+            # if zillow couldn't find the house
                 
             returnDF.set_value(index, "APN", apn)
             returnDF.set_value(index, "Address", address)
             returnDF.set_value(index, "Value", (parcelData['asr_total'], parcelData['asr_land']))
+            # usable_sq_ from parceldata and property_size from pyzillow are both too innacurate and inconsistent
+            returnDF.set_value(index, "ParcelSqFt", (parcelData['shape_area']))
             if apn == house['FORMATTED APN'].replace("-", ""):
                 returnDF.set_value(index, "Chosen", True)
             else:
@@ -198,30 +195,16 @@ def getData(row):
             returnDF.set_value(index, "House", [mapShape])
         
             returnDF.set_value(index, "Type", (parcelData['nucleus_zo']))
-            returnDF.set_value(index, "Bed/Bath", (parcelData['bedrooms'], parcelData['baths']))
+            returnDF.set_value(index, "Bed/Bath", (int(parcelData['bedrooms']), int(parcelData['baths'])/10))
             returnDF.set_value(index, "SqFtDelta", [mapArea, int(parcelData['total_lvg_'])])
             
         else:
-            if not returnDF.loc[returnDF['APN'] == apn].empty:
-                selectedRow = returnDF.loc[returnDF['APN'] == apn]
-                index1 = selectedRow.index[0]
-                selectedRow = selectedRow.iloc[0]
-                returnDF.set_value(index1, "House", selectedRow['House'] + [mapShape]) 
-                returnDF.set_value(index1, "SqFtDelta", [selectedRow['SqFtDelta'][0] + mapArea, selectedRow['SqFtDelta'][1]]) 
-                continue
-                """
-                selectedRow = returnDF.loc[returnDF['APN'] == apn].iloc[0]
-                # takes care of condos and multi family
-                if not selectedRow['House'] and result.home_type == "SingleFamily":
-                    continue
-                if not selectedRow['House'] and result.home_type != "SingleFamily":
-                    returnDF.set_value(index, "House", selectedRow['House'].append(mapShape))
-                    continue
-                """
             
             returnDF.set_value(index, "APN", apn)
             returnDF.set_value(index, "Address", address)
-            returnDF.set_value(index, "Value", (parcelData['asr_total'], parcelData['asr_land'], result.tax_value))
+            returnDF.set_value(index, "Value", ((parcelData['asr_total'] + float(result.tax_value))/2, parcelData['asr_land']))
+            # usable_sq_ from parceldata and property_size from pyzillow are both too innacurate and inconsistent
+            returnDF.set_value(index, "ParcelSqFt", (parcelData['shape_area']))
             if apn == house['FORMATTED APN'].replace("-", ""):
                 returnDF.set_value(index, "Chosen", True)
             else:
@@ -232,8 +215,22 @@ def getData(row):
         
             returnDF.set_value(index, "House", [mapShape])
     
-            returnDF.set_value(index, "Type", (result.home_type, parcelData['nucleus_zo']))
-            returnDF.set_value(index, "Bed/Bath", (result.bedrooms, result.bathrooms, parcelData['bedrooms'], parcelData['baths']))
+            returnDF.set_value(index, "Type", (result.home_type, int(parcelData['nucleus_zo'])))
+            
+            bedbath = []
+            if result.bedrooms == None:
+                bedbath.append(int(parcelData['bedrooms']))
+            elif int(result.bedrooms) == int(parcelData['bedrooms']):
+                bedbath.append(int(result.bedrooms))
+            else:
+                bedbath.append(int(parcelData['bedrooms']))
+            if result.bathrooms == None:
+                bedbath.append(int(parcelData['baths'])/10)
+            elif float(result.bathrooms) == int(parcelData['baths'])/10:
+                bedbath.append(float(result.bathrooms))
+            else:
+                bedbath.append(int(parcelData['baths'])/10)
+            returnDF.set_value(index, "Bed/Bath", (bedbath[0], bedbath[1]))
             if result.home_size != None:
                 returnDF.set_value(index, "SqFtDelta", [mapArea, max(int(result.home_size), int(parcelData['total_lvg_']))])
             else:
@@ -241,9 +238,9 @@ def getData(row):
          
         
         
-        
-    #returnDF.to_csv('out2.csv', index=False)
+    returnDF = returnDF.dropna(how='all')    
+    returnDF.to_csv('out.csv', index=False)
     return (returnDF, elevationPoints)
-    '''
+      
     
 #getData(0)

@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 import pandas as pd
 from shapely import wkt
-from matplotlib import pyplot as plt
 
 import numpy as np
 np.set_printoptions(threshold=np.nan)

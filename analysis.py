@@ -1,20 +1,9 @@
-import pandas as pd
 from matplotlib import pyplot as plt
 from descartes.patch import PolygonPatch
+import pandas as pd
 
 from figures import BLUE, SIZE, plot_coords, color_isvalid
 import gather
-import Elevation as elev
-
-def getElev():
-    elevationPoints_ = elev.elevationPoints
-    elevationPoints = []
-    
-    for point in elevationPoints_:
-        sp = elev.convertLLSP(point[0], point[1])
-        elevationPoints.append((sp[0], sp[1], point[2]))
-    
-    return elevationPoints
 
 def plotMultiPolygon(shape):
     fig = plt.figure(1, figsize=SIZE, dpi=90)
@@ -32,17 +21,39 @@ def plotMultiPolygon(shape):
         
     ax.set_title('Polygon')
     
-#For live demo, uncomment the getElevation code and the returnDF code in gather.py and the following line
-#surrHouses, surrElevation = gather.getData(0)
+#For live demo, uncomment the getElevation code in gather.py
+surrHouses, surrElevation = gather.getData(45982)
 
-surrHouses = pd.read_csv("out1.csv")
-elevations = getElev()
-
-# analyze dataframe to find floors, make sure to add up polygons for condos or multi family, consider bed/bath # and home value (asr_total & tax_value)
+# analyze dataframe to find floors, consider bed/bath # and home value (asr_total & tax_value)
 # deal with empty rows, empty total_lvg area 45982 8, and add up polygons for condos or multi family
 
+def plotData2D(data):
+    
+    for index, row in data.iterrows():
+        plotMultiPolygon(row['Parcel'])
+        for i in row['House']:
+            plotMultiPolygon(i)
+
 def getFloors(data):
-    data = data.dropna(how='all')
+    
+    ratios = []    
+    
+    for index, row in data.iterrows():
+        totalVal = row['Value'][0]
+        landVal = row['Value'][1]
+        observedFt = row['SqFtDelta'][0]
+        expectedFt = row['SqFtDelta'][1]
+        
+        if expectedFt != 0 and len(row['House']) == 1:
+            valRatio = (totalVal-landVal)/expectedFt
+        else:
+            valRatio = (totalVal-landVal)/observedFt    
+        ftRatio = expectedFt/observedFt
+        ratios.append((ftRatio, valRatio))
+    
+    se = pd.Series(ratios)
+    data['Ratios'] = se.values
     return data
 
-print(getFloors(surrHouses))
+plotData2D(surrHouses)
+getFloors(surrHouses).to_csv('out1.csv', index=False)

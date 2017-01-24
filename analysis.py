@@ -22,7 +22,7 @@ def plotMultiPolygon(shape):
     ax.set_title('Polygon')
     
 #For live demo, uncomment the getElevation code in gather.py
-surrHouses, surrElevation = gather.getData(45982)
+#surrHouses, surrElevation = gather.getData(45982)
 
 # analyze dataframe to find floors, consider bed/bath # and home value (asr_total & tax_value)
 # deal with empty rows, empty total_lvg area 45982 8, and add up polygons for condos or multi family
@@ -51,9 +51,12 @@ def getFloors(data):
         ftRatio = expectedFt/observedFt
         ratios.append((ftRatio, valRatio))
     
-    se = pd.Series(ratios)
-    data['Ratios'] = se.values
+    data['Ratios'] = pd.Series(ratios).values
     return data
 
-plotData2D(surrHouses)
-getFloors(surrHouses).to_csv('out1.csv', index=False)
+#plotData2D(surrHouses)
+#getFloors(surrHouses).to_csv('out1.csv', index=False)
+
+df = pd.read_csv("out1.csv")
+floors = [2, 1, 1, 1.5]
+df['FloorObserved'] = pd.Series(floors).values

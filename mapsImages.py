@@ -53,18 +53,18 @@ def getBuildingPolygons(lat, long, zoom, w, h, polys):
         style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:administrative.land_parcel%7Cvisibility:off"
     if polys == "parcels":
         style = "feature:administrative.land_parcel%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:landscape.man_made%7Cvisibility:off"
-    urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, str(w) + "x" + str(h)) + style + "&key=AIzaSyAT_hASGVJSp5KiEz3phNDtXij7kGd7m_A"                                                             
-                                                                          
+    urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, str(w) + "x" + str(h)) + style + "&key=AIzaSyCl_JAjxvlK75CvXbyAD9MzwO3x2xGcxx0"                                                             
+                                                        
     imgBuildings = io.imread(urlBuildings)
     imgBuildings = crop(imgBuildings, ((0, 22), (0, 0), (0, 0)))
     gray_imgBuildings = color.rgb2gray(imgBuildings)
     binary_imageBuildings = np.where(gray_imgBuildings > np.mean(gray_imgBuildings), 0.0, 1.0)
     contoursBuildings = find_contours(binary_imageBuildings, 0.1)
        
-    '''
-    fig, ax = plt.subplots()
-    ax.imshow(imgBuildings, interpolation='nearest', cmap=plt.cm.gray)
-    '''
+    
+    #fig, ax = plt.subplots()
+    #ax.imshow(imgBuildings, interpolation='nearest', cmap=plt.cm.gray)
+    
     
     surroundingPolygons = []
     

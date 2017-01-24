@@ -32,11 +32,17 @@ def plotMultiPolygon(shape):
         
     ax.set_title('Polygon')
     
-#For live demo, uncomment the getElevation code in gather.py and the following line
+#For live demo, uncomment the getElevation code and the returnDF code in gather.py and the following line
 #surrHouses, surrElevation = gather.getData(0)
 
-surrHouses = pd.read_csv("out.csv")
+surrHouses = pd.read_csv("out1.csv")
 elevations = getElev()
 
 # analyze dataframe to find floors, make sure to add up polygons for condos or multi family, consider bed/bath # and home value (asr_total & tax_value)
 # deal with empty rows, empty total_lvg area 45982 8, and add up polygons for condos or multi family
+
+def getFloors(data):
+    data = data.dropna(how='all')
+    return data
+
+print(getFloors(surrHouses))

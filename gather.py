@@ -80,8 +80,8 @@ def getData(row):
     # TODO: deal with shapes touching 0 3, 45982 25-26
     
     # Testing
-    """
-    test = nearestPolygonsDF.iloc[10]
+    
+    test = nearestPolygonsDF.iloc[11]
     areas = [test['area'], 0.0000, 0.0000]
     shapes = [test['Polygon'], test['Polygon']]
     address = ""
@@ -108,9 +108,9 @@ def getData(row):
     print(rooms)
     plotMultiPolygon(shapes[1])
     plotMultiPolygon(shapes[0])
-    """
     
     
+    '''
     zillow_data = ZillowWrapper("X1-ZWz19ed1y70qh7_1zmzq")
     
     """
@@ -131,7 +131,6 @@ def getData(row):
     for index, row in nearestPolygonsDF.iterrows():
         mapArea = row['area']
         mapShape = row['Polygon']
-        parcelShape = row['Polygon']
         
         x1 = 0
         y1 = 0
@@ -243,5 +242,8 @@ def getData(row):
         
         
         
-    #returnDF.to_csv('out.csv')
+    #returnDF.to_csv('out2.csv', index=False)
     return (returnDF, elevationPoints)
+    '''
+    
+#getData(0)

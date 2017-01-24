@@ -112,7 +112,7 @@ def getData(row):
     """
     
     
-    zillow_data = ZillowWrapper("X1-ZWz19ed1y70qh7_1zmzq")
+    zillow_data = ZillowWrapper("X1-ZWz1fm3nv90ft7_aovt1")
     
     """
     try: 
@@ -128,7 +128,7 @@ def getData(row):
     
     # Works around condos/multi family by adding polygons, works around small weird random polygons, works around non-intersecting house/parcel
     # Modular so the zillow api failing only affects the type column, ('SingleFamily', 10) to 10
-    returnDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["APN", "Parcel", "House", "Floors", "Address", "SqFtDelta", "Bed/Bath", "Type", "Value", "ParcelSqFt","Chosen"])
+    returnDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["APN", "Parcel", "House", "Address", "SqFtDelta", "Bed/Bath", "Type", "Value", "ParcelSqFt","Chosen"])
     
     for index, row in nearestPolygonsDF.iterrows():
         mapArea = row['area']

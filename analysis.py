@@ -22,7 +22,7 @@ def plotMultiPolygon(shape):
     ax.set_title('Polygon')
     
 #For live demo, uncomment the getElevation code in gather.py
-#surrHouses, surrElevation = gather.getData(45982)
+surrHouses, surrElevation = gather.getData(45982)
 
 # analyze dataframe to find floors, consider bed/bath # and home value (asr_total & tax_value)
 # deal with empty rows, empty total_lvg area 45982 8, and add up polygons for condos or multi family
@@ -34,9 +34,10 @@ def plotData2D(data):
         for i in row['House']:
             plotMultiPolygon(i)
 
-def getFloors(data):
+def getRatios(data):
     
-    ratios = []    
+    ratios = []
+    totalBB = 0
     
     for index, row in data.iterrows():
         totalVal = row['Value'][0]
@@ -49,14 +50,52 @@ def getFloors(data):
         else:
             valRatio = (totalVal-landVal)/observedFt    
         ftRatio = expectedFt/observedFt
-        ratios.append((ftRatio, valRatio))
-    
+        ratio = (ftRatio, valRatio, row['Bed/Bath'][0] + row['Bed/Bath'][1])
+        ratios.append(ratio)
+        
+        totalBB += ratio[2]
+        
     data['Ratios'] = pd.Series(ratios).values
+    return (data, totalBB/data.shape[0])
+
+def getFloors(data):
+    
+    data, avgBB = getRatios(data)
+    print(avgBB)
+    floors = []    
+    
+    for index, row in data.iterrows():
+        
+        if row['Ratios'][2] >= 10:
+            floors.append(2)
+            continue
+        
+        if row['Ratios'][1] >= 250 and row['Ratios'][2] > avgBB:
+            floors.append(2)
+            continue
+        
+        elif row['Ratios'][0] >= 1 and row['Ratios'][1] >= 97:
+            floors.append(2)
+            continue
+        
+        elif (row['Ratios'][0] >= 1 or row['Ratios'][1] >= 100) and row['Ratios'][2] > avgBB:
+            floors.append(2)
+            continue
+        
+        elif row['Ratios'][0] >= 0.75 and row['Ratios'][1] >= 50 and row['Ratios'][2] > avgBB:
+            floors.append(2)
+            continue
+        
+        else:
+            floors.append(1)
+    
+    data['Floors'] = pd.Series(floors).values
     return data
 
-#plotData2D(surrHouses)
+plotData2D(surrHouses)
 #getFloors(surrHouses).to_csv('out1.csv', index=False)
 
-df = pd.read_csv("out1.csv")
-floors = [2, 1, 1, 1.5]
-df['FloorObserved'] = pd.Series(floors).values
+surrHouses = getFloors(surrHouses)
+
+
+

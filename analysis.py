@@ -5,6 +5,8 @@ import pandas as pd
 from figures import BLUE, SIZE, plot_coords, color_isvalid
 import gather
 
+from shapely.geometry import Polygon, LineString, Point
+
 from matplotlib import cm
 from matplotlib.ticker import MaxNLocator
 import mpl_toolkits.mplot3d.art3d as art3d
@@ -26,7 +28,7 @@ def plotMultiPolygon(shape):
     ax.set_title('Polygon')
     
 #For live demo, uncomment the getElevation code in gather.py
-surrHouses, surrElevation = gather.getData(45982)
+surrHouses, surrElevation = gather.getData(0)
 
 # deal with empty total_lvg area 45982 8
 
@@ -37,7 +39,7 @@ def plotData2D(data):
         for i in row['House']:
             plotMultiPolygon(i)
             
-def Plot3DSurfaceWithPatch(points, patches):
+def Plot3DSurfaceWithPatches(points, patches, height):
     Xs, Ys, Zs = [], [], []
     
     for i in points:
@@ -52,14 +54,17 @@ def Plot3DSurfaceWithPatch(points, patches):
     fig.colorbar(surf)
     
     for i in patches:
-        ax.add_patch(i[0])
-        art3d.pathpatch_2d_to_3d(i[0], z=i[1], zdir="z")
+        for j in i[0]:
+            ax.add_patch(j)
+            art3d.pathpatch_2d_to_3d(j, z=i[1], zdir="z")
     
     ax.xaxis.set_major_locator(MaxNLocator(5))
     ax.yaxis.set_major_locator(MaxNLocator(6))
     ax.zaxis.set_major_locator(MaxNLocator(5))
     
-    fig.tight_layout()
+    ax.set_zlim3d(0,height)
+    
+    #fig.tight_layout()
             
     plt.show() 
 
@@ -90,7 +95,7 @@ def getRatios(data):
 def getFloors(data):
     
     data, avgBB = getRatios(data)
-    print(avgBB)
+    #print(avgBB)
     floors = []    
     
     for index, row in data.iterrows():
@@ -125,6 +130,78 @@ def getFloors(data):
 #getFloors(surrHouses).to_csv('out1.csv', index=False)
 
 surrHouses = getFloors(surrHouses)  
+'''
+I need to get all the polygons for parcels and houses. CHECK
+Find the centroid. CHECK
+FInd the nearest elevation point and use that as the z. CHECK
+Convert all the polygons to patches and plot all the patches with the elevations CHECK
+'''
 
+#House Polygons
 
-#PolygonPatch(shape, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), zorder=2)
+housePolys = []
+for index, row in surrHouses.iterrows():
+    shapes = row['House']
+    centroids = []
+    centroid = 0
+    
+    if len(shapes) > 2:
+        for shape in shapes:
+            centroid = shape.centroid
+            centroids.append((centroid.x, centroid.y))
+        centroid = Polygon(centroids).centroid
+    
+    elif len(shapes) > 1:
+        centroid = LineString([(shapes[0].centroid.x, shapes[0].centroid.y), (shapes[1].centroid.x, shapes[1].centroid.y)]).centroid
+        
+    else:
+        centroid = shapes[0].centroid
+    
+    housePolys.append([shapes, (centroid.x, centroid.y), row['Floors']])
+
+#print(housePolys)
+#print(surrElevation)
+
+chosenPoint = (0,0)
+idx = 0
+for house in housePolys:
+    houseHeight = 0
+    if house[2] == 1:
+        houseHeight = 15
+    if house[2] == 2:
+        houseHeight = 23
+    
+    for elevPoint in surrElevation:
+        if (abs(elevPoint[0] - house[1][0]) + abs(elevPoint[1] - house[1][1])) < (abs(chosenPoint[0] - house[1][0]) + abs(chosenPoint[1] - house[1][1])):
+            chosenPoint = (elevPoint[0], elevPoint[1])
+            housePolys[idx] = [house[0], house[1], elevPoint[2] + houseHeight]
+    
+    chosenPoint = (0,0)
+    idx += 1
+
+#print(housePolys)
+idx = 0
+max = 0
+for house in housePolys:
+    if house[2] > max:
+        max = house[2]
+    
+    
+    patches = []
+    for i in house[0]:
+        patch = PolygonPatch(i, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), zorder=2)
+        patches.append(patch)
+    
+    housePolys[idx] = [patches, house[2]]
+        
+    idx += 1
+        
+#print(housePolys)
+Plot3DSurfaceWithPatches(surrElevation, housePolys, max)
+
+        
+        
+        
+        
+        
+        

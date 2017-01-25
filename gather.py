@@ -67,10 +67,10 @@ def getData(row):
     
     
     #Box: 32.873320, -117.250975 to 32.871759, -117.248062
-    #elevationPoints = elev.getElevationGoogleBox(latitude + 0.0025, longitude + 0.0025, latitude - 0.0025, longitude - 0.0025, 25, 25))
+    elevationPoints_ = elev.getElevationGoogleBox(latitude + 0.002, longitude + 0.002, latitude - 0.002, longitude - 0.002, 15, 15)
     
     #comes as lat long, need to convert to SP
-    elevationPoints_ = elev.elevationPoints_
+    #elevationPoints_ = elev.elevationPoints_
     elevationPoints = []
     
     for point in elevationPoints_:

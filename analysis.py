@@ -6,6 +6,8 @@ from figures import BLUE, SIZE, plot_coords, color_isvalid
 import gather
 
 from shapely.geometry import Polygon, LineString, Point
+from scipy import spatial
+import numpy as np
 
 from matplotlib import cm
 from matplotlib.ticker import MaxNLocator
@@ -159,6 +161,7 @@ def getHousePatches(surrHouses):
     
     chosenPoint = (0,0)
     idx = 0
+    heights = []
     for house in housePolys:
         houseHeight = 0
         if house[2] == 1:
@@ -169,10 +172,13 @@ def getHousePatches(surrHouses):
         for elevPoint in surrElevation:
             if (abs(elevPoint[0] - house[1][0]) + abs(elevPoint[1] - house[1][1])) < (abs(chosenPoint[0] - house[1][0]) + abs(chosenPoint[1] - house[1][1])):
                 chosenPoint = (elevPoint[0], elevPoint[1])
-                housePolys[idx] = [house[0], house[1], elevPoint[2] + houseHeight]
+                housePolys[idx] = [house[0], house[1], elevPoint[2] + houseHeight]       
         
+        heights.append(housePolys[idx][2])
         chosenPoint = (0,0)
         idx += 1
+    
+    surrHouses['Heights'] = pd.Series(heights).values
     
     #print(housePolys)
     idx = 0
@@ -190,9 +196,74 @@ def getHousePatches(surrHouses):
         housePolys[idx] = [patches, house[2]]
             
         idx += 1
-  
-    return (housePolys, max)
+    
+    return (housePolys, max, surrHouses)
 
+'''
+convert point to 2d
+find nearest elevation square, find the height delta
+run through house polygons (in 2d) to see if the point is in any, if it is return the height delta
+'''
+
+def elevationSurfaceDelta(point, surfacePts):        
+        
+        surfacePts2D = []
+        point2D = (point[0], point[1])
+        
+        for i in surfacePts:
+            surfacePts2D.append((i[0], i[1]))
+            
+        distances, indices = spatial.KDTree(surfacePts2D).query(point2D, k=4)
+        
+        # square of elevation points right above our point
+        elevSquare = []
+        
+        for i in indices:
+            elevSquare.append(surfacePts[i])
+        
+        # Check which triangular plane to use
+        
+        distances, indices = spatial.KDTree(elevSquare).query(point2D, k=1)
+        closest = elevSquare[indices[0]]
+        distances, indices = spatial.KDTree(elevSquare).query(closest, k=2)
+        triPoints = [closest, (elevSquare[indices[0]]), (elevSquare[indices[1]])]
+        
+        # calculate 2 planes for square
+        
+        p1 = np.array(triPoints[0])
+        p2 = np.array(triPoints[1])
+        p3 = np.array(triPoints[2])
+        
+        v1 = p3 - p1
+        v2 = p2 - p1
+        
+        # the cross product is a vector normal to the plane
+        cp = np.cross(v1, v2)
+        a, b, c = cp
+        
+        # This evaluates a * x3 + b * y3 + c * z3 which equals d
+        d = np.dot(cp, p3)
+        
+        Z = (d - a * point[0] - b * point[1]) / c
+             
+        return Z - point[2]
+        
+def houseRoofDelta(point, housesDF):
+            
+        point2D = Point(point[0], point[1])
+        
+        for index, row in housesDF.iterrows():
+            for i in row['House']:
+                if i.contains(point2D):
+                    #return delta, positive for roof above, negative for roof below
+                    return row['Heights'] - point[2]
+        
+        return None
+    
+    
+    
+    
+    
 #For live demo, uncomment the getElevation code in gather.py
 surrHouses, surrElevation = gather.getData(45982)
 #plotData2D(surrHouses)
@@ -200,11 +271,5 @@ surrHouses, surrElevation = gather.getData(45982)
 surrHouses = getFloors(surrHouses)  
 #print(housePolys)
 patches = getHousePatches(surrHouses)
+surrHouses = patches[2]
 Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
-
-        
-        
-        
-        
-        
-        

@@ -26,11 +26,8 @@ def plotMultiPolygon(shape):
         ax.add_patch(patch)
         
     ax.set_title('Polygon')
-    
-#For live demo, uncomment the getElevation code in gather.py
-surrHouses, surrElevation = gather.getData(0)
 
-# deal with empty total_lvg area 45982 8
+# TODO: deal with empty total_lvg area 45982 8
 
 def plotData2D(data):
     
@@ -126,10 +123,7 @@ def getFloors(data):
     data['Floors'] = pd.Series(floors).values
     return data
 
-#plotData2D(surrHouses)
-#getFloors(surrHouses).to_csv('out1.csv', index=False)
 
-surrHouses = getFloors(surrHouses)  
 '''
 I need to get all the polygons for parcels and houses. CHECK
 Find the centroid. CHECK
@@ -137,67 +131,76 @@ FInd the nearest elevation point and use that as the z. CHECK
 Convert all the polygons to patches and plot all the patches with the elevations CHECK
 '''
 
-#House Polygons
-
-housePolys = []
-for index, row in surrHouses.iterrows():
-    shapes = row['House']
-    centroids = []
-    centroid = 0
+def getHousePatches(surrHouses):
+    #House Polygons
     
-    if len(shapes) > 2:
-        for shape in shapes:
-            centroid = shape.centroid
-            centroids.append((centroid.x, centroid.y))
-        centroid = Polygon(centroids).centroid
-    
-    elif len(shapes) > 1:
-        centroid = LineString([(shapes[0].centroid.x, shapes[0].centroid.y), (shapes[1].centroid.x, shapes[1].centroid.y)]).centroid
+    housePolys = []
+    for index, row in surrHouses.iterrows():
+        shapes = row['House']
+        centroids = []
+        centroid = 0
         
-    else:
-        centroid = shapes[0].centroid
+        if len(shapes) > 2:
+            for shape in shapes:
+                centroid = shape.centroid
+                centroids.append((centroid.x, centroid.y))
+            centroid = Polygon(centroids).centroid
+        
+        elif len(shapes) > 1:
+            centroid = LineString([(shapes[0].centroid.x, shapes[0].centroid.y), (shapes[1].centroid.x, shapes[1].centroid.y)]).centroid
+            
+        else:
+            centroid = shapes[0].centroid
+        
+        housePolys.append([shapes, (centroid.x, centroid.y), row['Floors']])
     
-    housePolys.append([shapes, (centroid.x, centroid.y), row['Floors']])
-
-#print(housePolys)
-#print(surrElevation)
-
-chosenPoint = (0,0)
-idx = 0
-for house in housePolys:
-    houseHeight = 0
-    if house[2] == 1:
-        houseHeight = 15
-    if house[2] == 2:
-        houseHeight = 23
-    
-    for elevPoint in surrElevation:
-        if (abs(elevPoint[0] - house[1][0]) + abs(elevPoint[1] - house[1][1])) < (abs(chosenPoint[0] - house[1][0]) + abs(chosenPoint[1] - house[1][1])):
-            chosenPoint = (elevPoint[0], elevPoint[1])
-            housePolys[idx] = [house[0], house[1], elevPoint[2] + houseHeight]
+    #print(housePolys)
+    #print(surrElevation)
     
     chosenPoint = (0,0)
-    idx += 1
+    idx = 0
+    for house in housePolys:
+        houseHeight = 0
+        if house[2] == 1:
+            houseHeight = 15
+        if house[2] == 2:
+            houseHeight = 23
+        
+        for elevPoint in surrElevation:
+            if (abs(elevPoint[0] - house[1][0]) + abs(elevPoint[1] - house[1][1])) < (abs(chosenPoint[0] - house[1][0]) + abs(chosenPoint[1] - house[1][1])):
+                chosenPoint = (elevPoint[0], elevPoint[1])
+                housePolys[idx] = [house[0], house[1], elevPoint[2] + houseHeight]
+        
+        chosenPoint = (0,0)
+        idx += 1
+    
+    #print(housePolys)
+    idx = 0
+    max = 0
+    for house in housePolys:
+        if house[2] > max:
+            max = house[2]
+        
+        
+        patches = []
+        for i in house[0]:
+            patch = PolygonPatch(i, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), zorder=2)
+            patches.append(patch)
+        
+        housePolys[idx] = [patches, house[2]]
+            
+        idx += 1
+  
+    return (housePolys, max)
 
+#For live demo, uncomment the getElevation code in gather.py
+surrHouses, surrElevation = gather.getData(45982)
+#plotData2D(surrHouses)
+#getFloors(surrHouses).to_csv('out1.csv', index=False)
+surrHouses = getFloors(surrHouses)  
 #print(housePolys)
-idx = 0
-max = 0
-for house in housePolys:
-    if house[2] > max:
-        max = house[2]
-    
-    
-    patches = []
-    for i in house[0]:
-        patch = PolygonPatch(i, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), zorder=2)
-        patches.append(patch)
-    
-    housePolys[idx] = [patches, house[2]]
-        
-    idx += 1
-        
-#print(housePolys)
-Plot3DSurfaceWithPatches(surrElevation, housePolys, max)
+patches = getHousePatches(surrHouses)
+Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
 
         
         

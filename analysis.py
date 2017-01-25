@@ -213,26 +213,11 @@ def elevationSurfaceDelta(point, surfacePts):
         for i in surfacePts:
             surfacePts2D.append((i[0], i[1]))
             
-        distances, indices = spatial.KDTree(surfacePts2D).query(point2D, k=4)
+        distances, indices = spatial.KDTree(surfacePts2D).query(point2D, k=3)
         
-        # square of elevation points right above our point
-        elevSquare = []
-        
-        for i in indices:
-            elevSquare.append(surfacePts[i])
-        
-        # Check which triangular plane to use
-        
-        distances, indices = spatial.KDTree(elevSquare).query(point2D, k=1)
-        closest = elevSquare[indices[0]]
-        distances, indices = spatial.KDTree(elevSquare).query(closest, k=2)
-        triPoints = [closest, (elevSquare[indices[0]]), (elevSquare[indices[1]])]
-        
-        # calculate 2 planes for square
-        
-        p1 = np.array(triPoints[0])
-        p2 = np.array(triPoints[1])
-        p3 = np.array(triPoints[2])
+        p1 = np.array(surfacePts[indices[0]])
+        p2 = np.array(surfacePts[indices[1]])
+        p3 = np.array(surfacePts[indices[2]])
         
         v1 = p3 - p1
         v2 = p2 - p1
@@ -258,10 +243,7 @@ def houseRoofDelta(point, housesDF):
                     #return delta, positive for roof above, negative for roof below
                     return row['Heights'] - point[2]
         
-        return None
-    
-    
-    
+        return None    
     
     
 #For live demo, uncomment the getElevation code in gather.py
@@ -273,3 +255,10 @@ surrHouses = getFloors(surrHouses)
 patches = getHousePatches(surrHouses)
 surrHouses = patches[2]
 Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
+
+
+
+
+
+
+

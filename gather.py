@@ -67,15 +67,15 @@ def getData(row):
     
     
     #Box: 32.873320, -117.250975 to 32.871759, -117.248062
-    #elevationPoints = elev.getElevationGoogleBox(latitude + 0.0015, longitude + 0.0015, latitude - 0.0015, longitude - 0.0015, 25, 25))
+    #elevationPoints = elev.getElevationGoogleBox(latitude + 0.0025, longitude + 0.0025, latitude - 0.0025, longitude - 0.0025, 25, 25))
     
     #comes as lat long, need to convert to SP
-    elevationPoints_ = elev.elevationPoints
+    elevationPoints_ = elev.elevationPoints_
     elevationPoints = []
     
     for point in elevationPoints_:
         sp = elev.convertLLSP(point[0], point[1])
-        elevationPoints.append((sp[0], sp[1], point[2]))
+        elevationPoints.append((sp[0], sp[1], point[2] * 3.2808399))
         
     # TODO: deal with shapes touching 0 3, 45982 25-26
     # TODO: deal with border houses that still barely touch a parcel (plot 45982), they don't matter cause they're far away fron chosen house
@@ -239,7 +239,7 @@ def getData(row):
         
         
     returnDF = returnDF.dropna(how='all')    
-    returnDF.to_csv('out.csv', index=False)
+    #returnDF.to_csv('out.csv', index=False)
     return (returnDF, elevationPoints)
       
     

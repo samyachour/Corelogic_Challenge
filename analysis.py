@@ -5,6 +5,10 @@ import pandas as pd
 from figures import BLUE, SIZE, plot_coords, color_isvalid
 import gather
 
+from matplotlib import cm
+from matplotlib.ticker import MaxNLocator
+import mpl_toolkits.mplot3d.art3d as art3d
+
 def plotMultiPolygon(shape):
     fig = plt.figure(1, figsize=SIZE, dpi=90)
     ax = fig.add_subplot(121)
@@ -24,8 +28,7 @@ def plotMultiPolygon(shape):
 #For live demo, uncomment the getElevation code in gather.py
 surrHouses, surrElevation = gather.getData(45982)
 
-# analyze dataframe to find floors, consider bed/bath # and home value (asr_total & tax_value)
-# deal with empty rows, empty total_lvg area 45982 8, and add up polygons for condos or multi family
+# deal with empty total_lvg area 45982 8
 
 def plotData2D(data):
     
@@ -33,6 +36,32 @@ def plotData2D(data):
         plotMultiPolygon(row['Parcel'])
         for i in row['House']:
             plotMultiPolygon(i)
+            
+def Plot3DSurfaceWithPatch(points, patches):
+    Xs, Ys, Zs = [], [], []
+    
+    for i in points:
+        Xs.append(i[0])
+        Ys.append(i[1])
+        Zs.append(i[2])
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    surf = ax.plot_trisurf(Xs, Ys, Zs, cmap=cm.jet, linewidth=0)
+    fig.colorbar(surf)
+    
+    for i in patches:
+        ax.add_patch(i[0])
+        art3d.pathpatch_2d_to_3d(i[0], z=i[1], zdir="z")
+    
+    ax.xaxis.set_major_locator(MaxNLocator(5))
+    ax.yaxis.set_major_locator(MaxNLocator(6))
+    ax.zaxis.set_major_locator(MaxNLocator(5))
+    
+    fig.tight_layout()
+            
+    plt.show() 
 
 def getRatios(data):
     
@@ -92,10 +121,10 @@ def getFloors(data):
     data['Floors'] = pd.Series(floors).values
     return data
 
-plotData2D(surrHouses)
+#plotData2D(surrHouses)
 #getFloors(surrHouses).to_csv('out1.csv', index=False)
 
-surrHouses = getFloors(surrHouses)
+surrHouses = getFloors(surrHouses)  
 
 
-
+#PolygonPatch(shape, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), zorder=2)

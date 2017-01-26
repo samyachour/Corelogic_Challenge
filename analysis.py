@@ -36,6 +36,20 @@ def plotData2D(data):
         for i in row['House']:
             plotMultiPolygon(i)
             
+def plotLOS2D(poly, lines):
+    fig = plt.figure(1, figsize=SIZE, dpi=90)
+    ax = fig.add_subplot(121)
+    
+    plot_coords(ax, poly.exterior, alpha=0)
+    patch = PolygonPatch(poly, facecolor=color_isvalid(poly), edgecolor=color_isvalid(poly, valid=BLUE), alpha=0.5, zorder=2)
+    ax.add_patch(patch)
+    
+    for line in lines:
+        for point in line:
+            ax.scatter(point[0], point[1])
+            
+    plt.show()
+            
 def Plot3DSurfaceWithPatches(points, patches, height, lines=[]):
     Xs, Ys, Zs = [], [], []
     
@@ -67,8 +81,8 @@ def Plot3DSurfaceWithPatches(points, patches, height, lines=[]):
     
     #fig.tight_layout()
             
-    plt.show() 
-
+    plt.show()
+    
 def getRatios(data):
     
     ratios = []
@@ -187,7 +201,7 @@ def getHousePatches(surrHouses):
             if (abs(elevPoint[0] - house[1][0]) + abs(elevPoint[1] - house[1][1])) < (abs(chosenPoint[0] - house[1][0]) + abs(chosenPoint[1] - house[1][1])):
                 chosenPoint = (elevPoint[0], elevPoint[1])
                 housePolys[idx] = [house[0], house[1], elevPoint[2] + houseHeight]
-                if surrHouses['Chosen'].iloc[idx]: chosen = [elevPoint[2]]
+                if surrHouses['Chosen'].iloc[idx]: chosen = [elevPoint[2], house[2]]
         
         heights.append(housePolys[idx][2])
         chosenPoint = (0,0)
@@ -282,29 +296,27 @@ surrHouses = patches[2]
 chosenHouseNParcel = patches[3]
 topRightElev = list(map(max, zip(*surrElevation)))
 bottomLeftElev = list(map(min, zip(*surrElevation)))
-print(topRightElev)
-print(bottomLeftElev)
 
-def getSlopes(point_):
-    slope = 0.1
+def getSlopes(point_, propOrHouse):
+    slope = 0
     pointX = point_[0]
     pointY = point_[1]
     deltas = []
     
     plotLine = []
     
-    while slope <= 2.1:
+    while slope < 2.0:
         
         line = []
         deltasTemp = []
         for i in range (10,500, 10):
-            point = (pointX + i, pointY + (pointX + i) * slope, point_[2])
+            point = (pointX + i, pointY + i * slope, point_[2])
             line.append(point)
-            if chosenHouseNParcel[2].contains(Point(point[0], point[1], point[2])):
+            if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
                 deltasTemp = []
                 break
             
-            for i in chosenHouseNParcel[1]:
+            for i in chosenHouseNParcel[2]:
                 if i.contains(Point(point[0], point[1], point[2])):
                     deltasTemp = []
                     break
@@ -326,18 +338,19 @@ def getSlopes(point_):
         slope += 0.25
     
     slope = 0
-    while slope >= -2:
+    while slope > -2:
         slope -= 0.25
-
+        
+        line = []
         deltasTemp = []
         for i in range (10,500, 10):
-            point = (pointX + i, pointY + (pointX + i) * slope, point_[2])
-            
-            if chosenHouseNParcel[2].contains(Point(point[0], point[1], point[2])):
+            point = (pointX + i, pointY + i * slope, point_[2])
+            line.append(point)
+            if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
                 deltasTemp = []
                 break
             
-            for i in chosenHouseNParcel[1]:
+            for i in chosenHouseNParcel[2]:
                 if i.contains(Point(point[0], point[1], point[2])):
                     deltasTemp = []
                     break
@@ -353,53 +366,57 @@ def getSlopes(point_):
                 delta = elevationSurfaceDelta(point, surrElevation)
                 
             deltasTemp.append(delta)
-            
+        
+        plotLine.append(line)
         deltas.append(deltasTemp)
     
     slope = 0
-    while slope <= 2:
+    while slope < 2:
+        
+        line = []
+        deltasTemp = []
+        for i in range (-10,-500, -10):
+            point = (pointX + i, pointY + i * slope, point_[2])
+            line.append(point)
+            if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
+                deltasTemp = []
+                break
+            
+            for i in chosenHouseNParcel[2]:
+                if i.contains(Point(point[0], point[1], point[2])):
+                    deltasTemp = []
+                    break
+            
+            #check if we're off the elevation map
+            if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
+                break
+            if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
+                break
+            
+            delta = houseRoofDelta(point, surrHouses)
+            if delta == None:
+                delta = elevationSurfaceDelta(point, surrElevation)
+                
+            deltasTemp.append(delta)
+        
+        plotLine.append(line)
         slope += 0.25
-        
-        deltasTemp = []
-        for i in range (10,-500, -10):
-            point = (pointX + i, pointY + (pointX + i) * slope, point_[2])
-            
-            if chosenHouseNParcel[2].contains(Point(point[0], point[1], point[2])):
-                deltasTemp = []
-                break
-            
-            for i in chosenHouseNParcel[1]:
-                if i.contains(Point(point[0], point[1], point[2])):
-                    deltasTemp = []
-                    break
-            
-            #check if we're off the elevation map
-            if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
-                break
-            if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
-                break
-            
-            delta = houseRoofDelta(point, surrHouses)
-            if delta == None:
-                delta = elevationSurfaceDelta(point, surrElevation)
-                
-            deltasTemp.append(delta)
-            
         deltas.append(deltasTemp)
     
     slope = 0
-    while slope >= -2:
-        slope -= 0.25
+    while slope > -2:
+        slope -= 0.25 
         
+        line = []
         deltasTemp = []
-        for i in range (10,-500, -10):
-            point = (pointX + i, pointY + (pointX + i) * slope, point_[2])
-            
-            if chosenHouseNParcel[2].contains(Point(point[0], point[1], point[2])):
+        for i in range (-10,-500, -10):
+            point = (pointX + i, pointY + i * slope, point_[2])
+            line.append(point)
+            if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
                 deltasTemp = []
                 break
             
-            for i in chosenHouseNParcel[1]:
+            for i in chosenHouseNParcel[2]:
                 if i.contains(Point(point[0], point[1], point[2])):
                     deltasTemp = []
                     break
@@ -415,21 +432,97 @@ def getSlopes(point_):
                 delta = elevationSurfaceDelta(point, surrElevation)
                 
             deltasTemp.append(delta)
-            
+        
+        plotLine.append(line)
         deltas.append(deltasTemp) 
+        
+    line = []
+    deltasTemp = []
+    for i in range (-10,-500, -10):
+        point = (pointX, pointY + i, point_[2])
+        line.append(point)
+        if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
+            deltasTemp = []
+            break
+        
+        for i in chosenHouseNParcel[2]:
+            if i.contains(Point(point[0], point[1], point[2])):
+                deltasTemp = []
+                break
+        
+        #check if we're off the elevation map
+        if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
+            break
+        if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
+            break
+        
+        delta = houseRoofDelta(point, surrHouses)
+        if delta == None:
+            delta = elevationSurfaceDelta(point, surrElevation)
+            
+        deltasTemp.append(delta)
+    
+    plotLine.append(line)
+    deltas.append(deltasTemp)
+    
+    line = []
+    deltasTemp = []
+    for i in range (10,500, 10):
+        point = (pointX, pointY + i, point_[2])
+        line.append(point)
+        if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
+            deltasTemp = []
+            break
+        
+        for i in chosenHouseNParcel[2]:
+            if i.contains(Point(point[0], point[1], point[2])):
+                deltasTemp = []
+                break
+        
+        #check if we're off the elevation map
+        if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
+            break
+        if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
+            break
+        
+        delta = houseRoofDelta(point, surrHouses)
+        if delta == None:
+            delta = elevationSurfaceDelta(point, surrElevation)
+            
+        deltasTemp.append(delta)
+    
+    plotLine.append(line)
+    deltas.append(deltasTemp) 
 
     # 2D array of lines of sight deltas
     return deltas, plotLine
 
 
-parcel = list(chosenHouseNParcel[2].exterior.coords)
-result = getSlopes((parcel[0][0], parcel[0][1], chosenHouseNParcel[0]))
-Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1], result[1])
+# Find parcel LOS
+parcel = list(chosenHouseNParcel[3].exterior.coords)
 
+finalDeltasParcel = []
+for i in parcel:
+    result = getSlopes((i[0], i[1], chosenHouseNParcel[0] + 5), True)
+    finalDeltasParcel += result[0]
+    
+plotLOS2D(chosenHouseNParcel[3], result[1])
 
-print(result[0])
+# Find house LOS
+house = []
+for i in chosenHouseNParcel[2]:
+    house = house + (list(chosenHouseNParcel[3].exterior.coords))
 
+finalDeltasHouse = []
+for i in house:
+    result = getSlopes((i[0], i[1], chosenHouseNParcel[0] + 5), False)
+    finalDeltasHouse += result[0]
+   
+#plotLOS2D(chosenHouseNParcel[3], result[1])     
 
+if chosenHouseNParcel[1] == 2:
+    for i in house:
+        result = getSlopes((i[0], i[1], chosenHouseNParcel[0] + 15), False)
+        finalDeltasHouse += result[0]
 
-
-
+#plotLOS2D(chosenHouseNParcel[3], result[1])

@@ -237,10 +237,10 @@ def getData(row):
                 updated_property_details_response = zillow_data.get_updated_property_details(zillowID)
                 resultUp = GetUpdatedPropertyDetails(updated_property_details_response)
             except:
-                print("Zillow couldn't find floors, but could find everything else you wanted")
+                #print("Zillow couldn't find floors, but could find everything else you wanted")
+                pass
             else:
                 if resultUp.num_floors != None:
-                    print('floors num found!')
                     returnDF.set_value(index, "Floors", resultUp.num_floors) 
                
             if result.home_size != None:

@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from descartes.patch import PolygonPatch
 import pandas as pd
 
-from figures import BLUE, SIZE, plot_coords, color_isvalid
+from figures import BLUE, BLACK, SIZE, plot_coords, color_isvalid
 import gather
 
 from shapely.geometry import Polygon, LineString, Point
@@ -97,9 +97,11 @@ def getFloors(data):
     
     for index, row in data.iterrows():
         
-        if not np.isnan(row['Floors']):
-            print('floor num indexed!' + row['Address'])
-            floors.append(int(row['Floors']))
+        if type(row['Floors']) != float:
+            floors = int(row['Floors'])
+            if floors == 3:
+                floors = 2
+            floors.append(floors)
             continue
         
         elif row['Ratios'][2] >= 10:
@@ -197,7 +199,11 @@ def getHousePatches(surrHouses):
         
         patches = []
         for i in house[0]:
-            patch = PolygonPatch(i, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), zorder=2)
+            # I took out the valid shape checker, to put back ie facecolor=color_isvalid(shape)
+            if surrHouses['Chosen'].iloc[idx]:
+                patch = PolygonPatch(i, facecolor=BLACK, edgecolor=BLACK, zorder=2)
+            else:
+                patch = PolygonPatch(i, facecolor=BLUE, edgecolor=BLUE, zorder=2)
             patches.append(patch)
         
         housePolys[idx] = [patches, house[2]]
@@ -205,12 +211,6 @@ def getHousePatches(surrHouses):
         idx += 1
     
     return (housePolys, max, surrHouses)
-
-'''
-convert point to 2d
-find nearest elevation square, find the height delta
-run through house polygons (in 2d) to see if the point is in any, if it is return the height delta
-'''
 
 def elevationSurfaceDelta(point, surfacePts):        
         
@@ -254,17 +254,18 @@ def houseRoofDelta(point, housesDF):
     
     
 #For live demo, uncomment the getElevation code in gather.py
-surrHouses, surrElevation = gather.getData(45982)
+surrHouses, surrElevation = gather.getData(5)
 #plotData2D(surrHouses)
-getFloors(surrHouses).to_csv('out.csv', index=False)
-#surrHouses = getFloors(surrHouses)  
+#getFloors(surrHouses).to_csv('out.csv', index=False)
+surrHouses = getFloors(surrHouses)  
+surrHouses.to_csv('out.csv', index=False)
 #print(housePolys)
-#patches = getHousePatches(surrHouses)
-#surrHouses = patches[2]
-#Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
+patches = getHousePatches(surrHouses)
+surrHouses = patches[2]
+Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
 
 # TODO: deal with empty total_lvg area 45982 8
 # maybe work with land value rations? take into account how much of the house takes over the parcel
 
-#plot chosen house
+#calculate view obstruction!
 

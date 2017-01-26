@@ -12,7 +12,7 @@ import numpy as np
 np.set_printoptions(threshold=np.nan)
 pd.set_option('display.max_columns', 500)
 
-from pyzillow.pyzillow import ZillowWrapper, GetDeepSearchResults
+from pyzillow.pyzillow import ZillowWrapper, GetDeepSearchResults, GetUpdatedPropertyDetails
 
 def plotMultiPolygon(shape):
     fig = plt.figure(1, figsize=SIZE, dpi=90)
@@ -112,7 +112,7 @@ def getData(row):
     """
     
     
-    zillow_data = ZillowWrapper("X1-ZWz1fm3nv90ft7_aovt1")
+    zillow_data = ZillowWrapper("X1-ZWz19ed1y70qh7_1zmzq")
     
     """
     try: 
@@ -128,7 +128,7 @@ def getData(row):
     
     # Works around condos/multi family by adding polygons, works around small weird random polygons, works around non-intersecting house/parcel
     # Modular so the zillow api failing only affects the type column, ('SingleFamily', 10) to 10
-    returnDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["APN", "Parcel", "House", "Address", "SqFtDelta", "Bed/Bath", "Type", "Value", "ParcelSqFt","Chosen"])
+    returnDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["APN", "Parcel", "House", "Address", "SqFtDelta", "Bed/Bath", "Type", "Value", "ParcelSqFt","Chosen", "Floors"])
     
     for index, row in nearestPolygonsDF.iterrows():
         mapArea = row['area']
@@ -231,6 +231,18 @@ def getData(row):
             else:
                 bedbath.append(int(parcelData['baths'])/10)
             returnDF.set_value(index, "Bed/Bath", (bedbath[0], bedbath[1]))
+        
+            zillowID = result.zillow_id
+            try:
+                updated_property_details_response = zillow_data.get_updated_property_details(zillowID)
+                resultUp = GetUpdatedPropertyDetails(updated_property_details_response)
+            except:
+                print("Zillow couldn't find floors, but could find everything else you wanted")
+            else:
+                if resultUp.num_floors != None:
+                    print('floors num found!')
+                    returnDF.set_value(index, "Floors", resultUp.num_floors) 
+               
             if result.home_size != None:
                 returnDF.set_value(index, "SqFtDelta", [mapArea, max(int(result.home_size), int(parcelData['total_lvg_']))])
             else:

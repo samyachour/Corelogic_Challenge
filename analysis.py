@@ -29,8 +29,6 @@ def plotMultiPolygon(shape):
         
     ax.set_title('Polygon')
 
-# TODO: deal with empty total_lvg area 45982 8
-
 def plotData2D(data):
     
     for index, row in data.iterrows():
@@ -99,11 +97,20 @@ def getFloors(data):
     
     for index, row in data.iterrows():
         
-        if row['Ratios'][2] >= 10:
+        if not np.isnan(row['Floors']):
+            print('floor num indexed!' + row['Address'])
+            floors.append(int(row['Floors']))
+            continue
+        
+        elif row['Ratios'][2] >= 10:
             floors.append(2)
             continue
         
-        if row['Ratios'][1] >= 250 and row['Ratios'][2] > avgBB:
+        elif row['Ratios'][1] < 0:
+            floors.append(1)
+            continue
+        
+        elif row['Ratios'][1] >= 250 and row['Ratios'][2] > avgBB:
             floors.append(2)
             continue
         
@@ -115,7 +122,7 @@ def getFloors(data):
             floors.append(2)
             continue
         
-        elif row['Ratios'][0] >= 0.75 and row['Ratios'][1] >= 50 and row['Ratios'][2] > avgBB:
+        elif row['Ratios'][0] >= 0.80 and row['Ratios'][1] >= 80 and row['Ratios'][2] > avgBB:
             floors.append(2)
             continue
         
@@ -249,16 +256,15 @@ def houseRoofDelta(point, housesDF):
 #For live demo, uncomment the getElevation code in gather.py
 surrHouses, surrElevation = gather.getData(45982)
 #plotData2D(surrHouses)
-#getFloors(surrHouses).to_csv('out1.csv', index=False)
-surrHouses = getFloors(surrHouses)  
+getFloors(surrHouses).to_csv('out.csv', index=False)
+#surrHouses = getFloors(surrHouses)  
 #print(housePolys)
-patches = getHousePatches(surrHouses)
-surrHouses = patches[2]
-Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
+#patches = getHousePatches(surrHouses)
+#surrHouses = patches[2]
+#Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
 
+# TODO: deal with empty total_lvg area 45982 8
+# maybe work with land value rations? take into account how much of the house takes over the parcel
 
-
-
-
-
+#plot chosen house
 

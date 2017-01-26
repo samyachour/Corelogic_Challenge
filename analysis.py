@@ -287,7 +287,7 @@ surrHouses = patches[2]
 #Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
 
 # TODO: deal with empty total_lvg area 45982 8
-# maybe work with land value rations? take into account how much of the house takes over the parcel
+# maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
 
 #calculate view obstruction!
 # So we have surrHouses, surrElevation, chosenHouseNParcel
@@ -506,7 +506,7 @@ for i in parcel:
     result = getSlopes((i[0], i[1], chosenHouseNParcel[0] + 5), True)
     finalDeltasParcel += result[0]
     
-plotLOS2D(chosenHouseNParcel[3], result[1])
+#plotLOS2D(chosenHouseNParcel[3], result[1])
 
 # Find house LOS
 house = []
@@ -526,3 +526,17 @@ if chosenHouseNParcel[1] == 2:
         finalDeltasHouse += result[0]
 
 #plotLOS2D(chosenHouseNParcel[3], result[1])
+
+
+
+
+
+
+
+
+
+#FINALLY, ANALYSIS, we have finalDeltasParcel and finalDeltasHouse
+
+
+
+

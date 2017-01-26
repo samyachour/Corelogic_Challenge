@@ -111,7 +111,7 @@ def Plot3DScatter(points):
     plt.show()
 
 #Plot3DScatter(googleBox)
-#Plot3DSurface(elevationPoints)
+Plot3DSurface(elevationPoints)
 #Plot3DSurfaceWithPatch(elevationPoints)
 
 def Plot3DScatterSP(points):

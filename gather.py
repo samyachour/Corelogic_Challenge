@@ -28,7 +28,7 @@ def plotMultiPolygon(shape):
         patch = PolygonPatch(shape, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), alpha=0.5, zorder=2)
         ax.add_patch(patch)
         
-    ax.set_title('Polygon')
+    #ax.set_title('Polygon')
 
 def getData(row):
     coreLogic = pd.read_csv("../CorelogicResources/Corelogic_houses_csv.csv")
@@ -76,6 +76,14 @@ def getData(row):
     for point in elevationPoints_:
         sp = elev.convertLLSP(point[0], point[1])
         elevationPoints.append((sp[0], sp[1], point[2] * 3.2808399))
+    
+    '''
+    for index, row in nearestParcelsDF.iterrows():
+        plotMultiPolygon(row['Polygon'])
+    
+    for index, row in nearestPolygonsDF.iterrows():
+        plotMultiPolygon(row['Polygon'])
+    '''
         
     # TODO: deal with shapes touching 0 3, 45982 25-26
     # TODO: deal with border houses that still barely touch a parcel (plot 45982), they don't matter cause they're far away fron chosen house
@@ -253,6 +261,5 @@ def getData(row):
     returnDF = returnDF.dropna(how='all')    
     #returnDF.to_csv('out.csv', index=False)
     return (returnDF, elevationPoints)
-      
     
 #getData(0)

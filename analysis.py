@@ -298,13 +298,13 @@ def houseRoofDelta(point, housesDF):
 
 
 #For live demo, uncomment the getElevation code in gather.py
-surrHouses, surrElevation = gather.getData(2)
+surrHouses, surrElevation = gather.getData(10)
 #plotData2D(surrHouses)
 surrHouses = getFloors(surrHouses)  
 surrHouses.to_csv('out.csv', index=False)
 patches = getHousePatches(surrHouses)
 surrHouses = patches[2]
-#Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
+Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
 
 #print(elevationSurfaceDelta((6254423.823571282, 1899007.0645571742, 353.18389024367815), surrElevation))
 #print(elevationSurfaceDelta((6254373.823571282, 1899057.0645571742, 353.18389024367815), surrElevation))
@@ -318,9 +318,6 @@ topRightElev = list(map(max, zip(*surfacePts2D)))
 bottomLeftElev = list(map(min, zip(*surfacePts2D)))
 
 
-
-
-# TODO: Toy slopes and range steps so all the lines are equal, maybe use pi?
 def getSlopes(point_):
     pointX = point_[0]
     pointY = point_[1]

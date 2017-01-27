@@ -85,7 +85,7 @@ def getData(row):
         plotMultiPolygon(row['Polygon'])
     '''
         
-    # TODO: deal with shapes touching 0 3, 45982 25-26
+    # TODO: deal with shapes touching 0 3, 45982 25-26, if you put 1 as the row you want, it doesn't work cause that's the house that's touching another
     # TODO: deal with border houses that still barely touch a parcel (plot 45982), they don't matter cause they're far away fron chosen house
     
     """

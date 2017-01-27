@@ -294,6 +294,21 @@ def houseRoofDelta(point, housesDF):
 # TODO: deal with empty total_lvg area 45982 8
 # maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
 
+
+
+
+#For live demo, uncomment the getElevation code in gather.py
+surrHouses, surrElevation = gather.getData(0)
+#plotData2D(surrHouses)
+surrHouses = getFloors(surrHouses)  
+#surrHouses.to_csv('out.csv', index=False)
+patches = getHousePatches(surrHouses)
+surrHouses = patches[2]
+#Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
+
+#print(elevationSurfaceDelta((6254423.823571282, 1899007.0645571742, 353.18389024367815), surrElevation))
+#print(elevationSurfaceDelta((6254373.823571282, 1899057.0645571742, 353.18389024367815), surrElevation))
+
 chosenHouseNParcel = patches[3]
 
 surfacePts2D = []
@@ -301,6 +316,8 @@ for i in surrElevation:
     surfacePts2D.append((i[0], i[1]))
 topRightElev = list(map(max, zip(*surfacePts2D)))
 bottomLeftElev = list(map(min, zip(*surfacePts2D)))
+
+
 
 
 # TODO: Toy slopes and range steps so all the lines are equal, maybe use pi?
@@ -371,19 +388,6 @@ def getSlopes(point_):
 
     # 2D array of lines of sight deltas
     return deltas, plotLine
-    
-    
-#For live demo, uncomment the getElevation code in gather.py
-surrHouses, surrElevation = gather.getData(0)
-#plotData2D(surrHouses)
-surrHouses = getFloors(surrHouses)  
-#surrHouses.to_csv('out.csv', index=False)
-patches = getHousePatches(surrHouses)
-surrHouses = patches[2]
-#Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
-
-#print(elevationSurfaceDelta((6254423.823571282, 1899007.0645571742, 353.18389024367815), surrElevation))
-#print(elevationSurfaceDelta((6254373.823571282, 1899057.0645571742, 353.18389024367815), surrElevation))
 
 # Find LOS
 deltas = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].centroid.y, chosenHouseNParcel[0] + 5))[0]
@@ -395,9 +399,12 @@ deltas = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].cent
 
 #FINALLY, ANALYSIS, we have finalDeltas, -500-500 for each line so middle is closest
 
-weight = 1/abs(loc - len(array)/2)
-finalScore = 0
+center = len(deltas[0])/2
+total = 0
 
 for line in deltas:
+    for index, delta in enumerate(line):
+        weight = 1/abs(index - center)
+        total += weight * delta
     
-    
+print(total/len(deltas))

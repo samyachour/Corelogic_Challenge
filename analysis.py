@@ -47,7 +47,7 @@ def plotLOS2D(poly, lines):
     for line in lines:
         for point in line:
             ax.scatter(point[0], point[1])
-            ax.annotate(point[2], (point[0],point[1]))
+            #ax.annotate(point[2], (point[0],point[1]))
             
     plt.show()
             
@@ -117,10 +117,10 @@ def getFloors(data):
     for index, row in data.iterrows():
         
         if type(row['Floors']) != float:
-            floors = int(row['Floors'])
-            if floors == 3:
-                floors = 2
-            floors.append(floors)
+            floorNum = int(row['Floors'])
+            if floorNum == 3:
+                floorNum = 2
+            floors.append(floorNum)
             continue
         
         elif row['Ratios'][2] >= 10:
@@ -292,16 +292,16 @@ def houseRoofDelta(point, housesDF):
     
 
 # TODO: deal with empty total_lvg area 45982 8
-# maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
+# maybe also query corelogiic data in addition to zillow and sangis? maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
 
 
 
 
 #For live demo, uncomment the getElevation code in gather.py
-surrHouses, surrElevation = gather.getData(0)
+surrHouses, surrElevation = gather.getData(2)
 #plotData2D(surrHouses)
 surrHouses = getFloors(surrHouses)  
-#surrHouses.to_csv('out.csv', index=False)
+surrHouses.to_csv('out.csv', index=False)
 patches = getHousePatches(surrHouses)
 surrHouses = patches[2]
 #Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
@@ -343,9 +343,9 @@ def getSlopes(point_):
 
             #check if we're off the elevation map
             if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
-                break
+                continue
             if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
-                break
+                continue
             
             delta = houseRoofDelta(point, surrHouses)
             if delta == None:
@@ -370,9 +370,9 @@ def getSlopes(point_):
         
         #check if we're off the elevation map
         if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
-            break
+            continue
         if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
-            break
+            continue
         
         delta = houseRoofDelta(point, surrHouses)
         if delta == None:
@@ -405,6 +405,6 @@ total = 0
 for line in deltas:
     for index, delta in enumerate(line):
         weight = 1/abs(index - center)
-        total += weight * delta
+        total += weight * (-delta)
     
 print(total/len(deltas))

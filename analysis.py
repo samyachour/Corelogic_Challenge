@@ -259,9 +259,24 @@ def elevationSurfaceDelta(point, surfacePts):
         d = np.dot(cp, p3)
         
         Z = (d - a * point[0] - b * point[1]) / c
-             
-        return Z - point[2]
         
+        '''
+        fig = plt.figure()
+        ax = fig.add_subplot(212, projection='3d')
+        
+        ax.scatter(point[0], point[1], point[2])
+        ax.scatter(p1[0], p1[1], p1[2])
+        ax.scatter(p2[0], p2[1], p2[2])
+        ax.scatter(p3[0], p3[1], p3[2])
+            
+        plt.show()
+        '''
+        
+        if not Polygon([(p1[0], p1[1]), (p2[0], p2[1]), (p3[0], p3[1])]).contains(Point(point2D)):
+            return None
+        
+        return Z - point[2]
+   
 def houseRoofDelta(point, housesDF):
             
         point2D = Point(point[0], point[1])
@@ -283,6 +298,9 @@ surrHouses = getFloors(surrHouses)
 patches = getHousePatches(surrHouses)
 surrHouses = patches[2]
 #Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
+
+#print(elevationSurfaceDelta((6254423.823571282, 1899007.0645571742, 353.18389024367815), surrElevation))
+#print(elevationSurfaceDelta((6254373.823571282, 1899057.0645571742, 353.18389024367815), surrElevation))
 
 # TODO: deal with empty total_lvg area 45982 8
 # maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
@@ -326,6 +344,8 @@ def getSlopes(point_):
             delta = houseRoofDelta(point, surrHouses)
             if delta == None:
                 delta = elevationSurfaceDelta(point, surrElevation)
+                if delta == None:
+                    continue
             
             line.append(point)
             deltasTemp.append(delta)
@@ -351,6 +371,8 @@ def getSlopes(point_):
         delta = houseRoofDelta(point, surrHouses)
         if delta == None:
             delta = elevationSurfaceDelta(point, surrElevation)
+            if delta == None:
+                continue
             
         line.append(point)    
         deltasTemp.append(delta)
@@ -362,19 +384,15 @@ def getSlopes(point_):
     return deltas, plotLine
     
 
-# Find parcel LOS
-parcel = list(chosenHouseNParcel[3].exterior.coords)
-
+# Find LOS
 result = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].centroid.y, chosenHouseNParcel[0] + 5))
 
 #if chosenHouseNParcel[1] == 2:
     #result = getSlopes((chosenHouseNParcel[2][0].centroid.x, chosenHouseNParcel[2][0].centroid.y, chosenHouseNParcel[0] + 15))
 
 #plotLOS2D(chosenHouseNParcel[3], result[1])   
+
 Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1], result[1])
-
-
-
 
 
 #FINALLY, ANALYSIS, we have finalDeltasParcel and finalDeltasHouse

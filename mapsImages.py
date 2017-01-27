@@ -53,7 +53,7 @@ def getBuildingPolygons(lat, long, zoom, w, h, polys):
         style = "feature:landscape.man_made%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:administrative.land_parcel%7Cvisibility:off"
     if polys == "parcels":
         style = "feature:administrative.land_parcel%7Celement:geometry.stroke%7Cvisibility:on%7Ccolor:0xffffff%7Cweight:1&style=feature:road%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:landscape.man_made%7Cvisibility:off"
-    urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, str(w) + "x" + str(h)) + style + "&key=AIzaSyCQoU6vrnz9_5RM7G5WWODp84sdNOs6hC4"                                                             
+    urlBuildings = "https://maps.googleapis.com/maps/api/staticmap?center={},{}&zoom={}&format=png32&sensor=false&size={}&maptype=roadmap&style=".format(lat, long, zoom, str(w) + "x" + str(h)) + style + "&key=AIzaSyBeHZWKeMa2tS1leFEjei6pZHu9RJOON8o"                                                             
                                                         
     imgBuildings = io.imread(urlBuildings)
     imgBuildings = crop(imgBuildings, ((0, 22), (0, 0), (0, 0)))

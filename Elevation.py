@@ -166,7 +166,7 @@ def getElevationMSDNBoxManual(lat1, long1, lat2, long2, rows, cols):
 
 #2500 per day
 def getElevationGoogle(lat, long):
-    url = "https://maps.googleapis.com/maps/api/elevation/json?locations={},{}&key=AIzaSyBsPqaNJSY9CrOP0Vq_xtXZvla-D86Yr8Q".format(lat, long)
+    url = "https://maps.googleapis.com/maps/api/elevation/json?locations={},{}&key=AIzaSyB17tcw5haqOWbFiG19jlCjNnH9naYWnVE".format(lat, long)
     r = requests.get(url)
     elevation = r.json()['results'][0]['elevation']
     return elevation

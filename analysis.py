@@ -47,6 +47,7 @@ def plotLOS2D(poly, lines):
     for line in lines:
         for point in line:
             ax.scatter(point[0], point[1])
+            ax.annotate(point[2], (point[0],point[1]))
             
     plt.show()
             
@@ -289,18 +290,6 @@ def houseRoofDelta(point, housesDF):
         
         return None    
     
-    
-#For live demo, uncomment the getElevation code in gather.py
-surrHouses, surrElevation = gather.getData(0)
-#plotData2D(surrHouses)
-surrHouses = getFloors(surrHouses)  
-#surrHouses.to_csv('out.csv', index=False)
-patches = getHousePatches(surrHouses)
-surrHouses = patches[2]
-#Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
-
-#print(elevationSurfaceDelta((6254423.823571282, 1899007.0645571742, 353.18389024367815), surrElevation))
-#print(elevationSurfaceDelta((6254373.823571282, 1899057.0645571742, 353.18389024367815), surrElevation))
 
 # TODO: deal with empty total_lvg area 45982 8
 # maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
@@ -347,7 +336,7 @@ def getSlopes(point_):
                 if delta == None:
                     continue
             
-            line.append(point)
+            line.append((point[0], point[1], delta))
             deltasTemp.append(delta)
         
         plotLine.append(line)
@@ -374,7 +363,7 @@ def getSlopes(point_):
             if delta == None:
                 continue
             
-        line.append(point)    
+        line.append((point[0], point[1], delta))    
         deltasTemp.append(delta)
     
     plotLine.append(line)
@@ -383,17 +372,27 @@ def getSlopes(point_):
     # 2D array of lines of sight deltas
     return deltas, plotLine
     
+    
+#For live demo, uncomment the getElevation code in gather.py
+surrHouses, surrElevation = gather.getData(0)
+#plotData2D(surrHouses)
+surrHouses = getFloors(surrHouses)  
+#surrHouses.to_csv('out.csv', index=False)
+patches = getHousePatches(surrHouses)
+surrHouses = patches[2]
+#Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
+
+#print(elevationSurfaceDelta((6254423.823571282, 1899007.0645571742, 353.18389024367815), surrElevation))
+#print(elevationSurfaceDelta((6254373.823571282, 1899057.0645571742, 353.18389024367815), surrElevation))
 
 # Find LOS
-result = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].centroid.y, chosenHouseNParcel[0] + 5))
+deltas = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].centroid.y, chosenHouseNParcel[0] + 5))[0]
 
 #if chosenHouseNParcel[1] == 2:
-    #result = getSlopes((chosenHouseNParcel[2][0].centroid.x, chosenHouseNParcel[2][0].centroid.y, chosenHouseNParcel[0] + 15))
+#    result += getSlopes((chosenHouseNParcel[2][0].centroid.x, chosenHouseNParcel[2][0].centroid.y, chosenHouseNParcel[0] + 15))[0]
 
-#plotLOS2D(chosenHouseNParcel[3], result[1])   
+#plotLOS2D(chosenHouseNParcel[3], result[1])
 
-Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1], result[1])
+#FINALLY, ANALYSIS, we have finalDeltas, -500-500 for each line so middle is closest
 
-
-#FINALLY, ANALYSIS, we have finalDeltasParcel and finalDeltasHouse
-
+weight = 1/abs(loc - len(array)/2)

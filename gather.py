@@ -120,7 +120,7 @@ def getData(row):
     """
     
     
-    zillow_data = ZillowWrapper("X1-ZWz19ed1y70qh7_1zmzq")
+    zillow_data = ZillowWrapper("X1-ZWz19ecq40cemj_282ek")
     
     """
     try: 

@@ -79,7 +79,7 @@ def Plot3DSurfaceWithPatches(points, patches, height, lines=[]):
     
     ax.set_zlim3d(0,height)
     
-    #fig.tight_layout()
+    fig.tight_layout()
             
     plt.show()
     
@@ -278,10 +278,8 @@ def houseRoofDelta(point, housesDF):
 #For live demo, uncomment the getElevation code in gather.py
 surrHouses, surrElevation = gather.getData(0)
 #plotData2D(surrHouses)
-#getFloors(surrHouses).to_csv('out.csv', index=False)
 surrHouses = getFloors(surrHouses)  
 #surrHouses.to_csv('out.csv', index=False)
-#print(housePolys)
 patches = getHousePatches(surrHouses)
 surrHouses = patches[2]
 #Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
@@ -289,72 +287,36 @@ surrHouses = patches[2]
 # TODO: deal with empty total_lvg area 45982 8
 # maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
 
-#calculate view obstruction!
-# So we have surrHouses, surrElevation, chosenHouseNParcel
-# Use corners of house and parcel to grab multiple lines of sight with different slopes making a circle
-# Gives elevation, House, and parcel
 chosenHouseNParcel = patches[3]
-topRightElev = list(map(max, zip(*surrElevation)))
-bottomLeftElev = list(map(min, zip(*surrElevation)))
 
-def getSlopes(point_, propOrHouse):
-    slope = 0
+surfacePts2D = []
+for i in surrElevation:
+    surfacePts2D.append((i[0], i[1]))
+topRightElev = list(map(max, zip(*surfacePts2D)))
+bottomLeftElev = list(map(min, zip(*surfacePts2D)))
+
+
+# TODO: Toy slopes and range steps so all the lines are equal, maybe use pi?
+def getSlopes(point_):
     pointX = point_[0]
     pointY = point_[1]
     deltas = []
     
     plotLine = []
     
-    while slope < 2.0:
-        
-        line = []
-        deltasTemp = []
-        for i in range (10,500, 10):
-            point = (pointX + i, pointY + i * slope, point_[2])
-            line.append(point)
-            if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
-                deltasTemp = []
-                break
-            
-            for i in chosenHouseNParcel[2]:
-                if i.contains(Point(point[0], point[1], point[2])):
-                    deltasTemp = []
-                    break
-            
-            #check if we're off the elevation map
-            if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
-                break
-            if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
-                break
-            
-            delta = houseRoofDelta(point, surrHouses)
-            if delta == None:
-                delta = elevationSurfaceDelta(point, surrElevation)
-                
-            deltasTemp.append(delta)
-        
-        plotLine.append(line)
-        deltas.append(deltasTemp)
-        slope += 0.25
+    slopes = [0, 0.25, 1, 2, 3.5, 5.5,-0.25, -1, -2, -3.5, -5.5]
     
-    slope = 0
-    while slope > -2:
-        slope -= 0.25
+    for i in slopes:
         
         line = []
         deltasTemp = []
-        for i in range (10,500, 10):
-            point = (pointX + i, pointY + i * slope, point_[2])
-            line.append(point)
-            if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
-                deltasTemp = []
-                break
+        
+        for j in range (-500,500, 10):
+            point = (pointX + j, pointY + j * i, point_[2])
             
-            for i in chosenHouseNParcel[2]:
-                if i.contains(Point(point[0], point[1], point[2])):
-                    deltasTemp = []
-                    break
-            
+            if chosenHouseNParcel[3].contains(Point(point[0], point[1])):
+                continue
+
             #check if we're off the elevation map
             if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
                 break
@@ -364,91 +326,21 @@ def getSlopes(point_, propOrHouse):
             delta = houseRoofDelta(point, surrHouses)
             if delta == None:
                 delta = elevationSurfaceDelta(point, surrElevation)
-                
-            deltasTemp.append(delta)
-        
-        plotLine.append(line)
-        deltas.append(deltasTemp)
-    
-    slope = 0
-    while slope < 2:
-        
-        line = []
-        deltasTemp = []
-        for i in range (-10,-500, -10):
-            point = (pointX + i, pointY + i * slope, point_[2])
+            
             line.append(point)
-            if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
-                deltasTemp = []
-                break
-            
-            for i in chosenHouseNParcel[2]:
-                if i.contains(Point(point[0], point[1], point[2])):
-                    deltasTemp = []
-                    break
-            
-            #check if we're off the elevation map
-            if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
-                break
-            if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
-                break
-            
-            delta = houseRoofDelta(point, surrHouses)
-            if delta == None:
-                delta = elevationSurfaceDelta(point, surrElevation)
-                
-            deltasTemp.append(delta)
-        
-        plotLine.append(line)
-        slope += 0.25
-        deltas.append(deltasTemp)
-    
-    slope = 0
-    while slope > -2:
-        slope -= 0.25 
-        
-        line = []
-        deltasTemp = []
-        for i in range (-10,-500, -10):
-            point = (pointX + i, pointY + i * slope, point_[2])
-            line.append(point)
-            if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
-                deltasTemp = []
-                break
-            
-            for i in chosenHouseNParcel[2]:
-                if i.contains(Point(point[0], point[1], point[2])):
-                    deltasTemp = []
-                    break
-            
-            #check if we're off the elevation map
-            if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
-                break
-            if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
-                break
-            
-            delta = houseRoofDelta(point, surrHouses)
-            if delta == None:
-                delta = elevationSurfaceDelta(point, surrElevation)
-                
             deltasTemp.append(delta)
         
         plotLine.append(line)
         deltas.append(deltasTemp) 
-        
+    
     line = []
     deltasTemp = []
-    for i in range (-10,-500, -10):
-        point = (pointX, pointY + i, point_[2])
-        line.append(point)
-        if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
-            deltasTemp = []
-            break
+    
+    for j in range (-500,500, 10):
+        point = (pointX, pointY + j, point_[2])
         
-        for i in chosenHouseNParcel[2]:
-            if i.contains(Point(point[0], point[1], point[2])):
-                deltasTemp = []
-                break
+        if chosenHouseNParcel[3].contains(Point(point[0], point[1])):
+            continue
         
         #check if we're off the elevation map
         if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
@@ -460,83 +352,30 @@ def getSlopes(point_, propOrHouse):
         if delta == None:
             delta = elevationSurfaceDelta(point, surrElevation)
             
+        line.append(point)    
         deltasTemp.append(delta)
     
     plotLine.append(line)
     deltas.append(deltasTemp)
-    
-    line = []
-    deltasTemp = []
-    for i in range (10,500, 10):
-        point = (pointX, pointY + i, point_[2])
-        line.append(point)
-        if chosenHouseNParcel[3].contains(Point(point[0], point[1], point[2])) and propOrHouse:
-            deltasTemp = []
-            break
-        
-        for i in chosenHouseNParcel[2]:
-            if i.contains(Point(point[0], point[1], point[2])):
-                deltasTemp = []
-                break
-        
-        #check if we're off the elevation map
-        if point[0] > topRightElev[0] or point[1] > topRightElev[1]:
-            break
-        if point[0] < bottomLeftElev[0] or point[1] < bottomLeftElev[1]:
-            break
-        
-        delta = houseRoofDelta(point, surrHouses)
-        if delta == None:
-            delta = elevationSurfaceDelta(point, surrElevation)
-            
-        deltasTemp.append(delta)
-    
-    plotLine.append(line)
-    deltas.append(deltasTemp) 
 
     # 2D array of lines of sight deltas
     return deltas, plotLine
-
+    
 
 # Find parcel LOS
 parcel = list(chosenHouseNParcel[3].exterior.coords)
 
-finalDeltasParcel = []
-for i in parcel:
-    result = getSlopes((i[0], i[1], chosenHouseNParcel[0] + 5), True)
-    finalDeltasParcel += result[0]
-    
-#plotLOS2D(chosenHouseNParcel[3], result[1])
+result = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].centroid.y, chosenHouseNParcel[0] + 5))
 
-# Find house LOS
-house = []
-for i in chosenHouseNParcel[2]:
-    house = house + (list(chosenHouseNParcel[3].exterior.coords))
+#if chosenHouseNParcel[1] == 2:
+    #result = getSlopes((chosenHouseNParcel[2][0].centroid.x, chosenHouseNParcel[2][0].centroid.y, chosenHouseNParcel[0] + 15))
 
-finalDeltasHouse = []
-for i in house:
-    result = getSlopes((i[0], i[1], chosenHouseNParcel[0] + 5), False)
-    finalDeltasHouse += result[0]
-   
-#plotLOS2D(chosenHouseNParcel[3], result[1])     
-
-if chosenHouseNParcel[1] == 2:
-    for i in house:
-        result = getSlopes((i[0], i[1], chosenHouseNParcel[0] + 15), False)
-        finalDeltasHouse += result[0]
-
-#plotLOS2D(chosenHouseNParcel[3], result[1])
-
-
-
-
+#plotLOS2D(chosenHouseNParcel[3], result[1])   
+Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1], result[1])
 
 
 
 
 
 #FINALLY, ANALYSIS, we have finalDeltasParcel and finalDeltasHouse
-
-
-
 

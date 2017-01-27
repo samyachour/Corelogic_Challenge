@@ -188,9 +188,10 @@ def getHousePatches(surrHouses):
     #print(surrElevation)
     
     chosenPoint = (0,0)
+    idx = 0
     heights = []
     chosen = []
-    for index, house in housePolys:
+    for house in housePolys:
         houseHeight = 0
         if house[2] == 1:
             houseHeight = 15
@@ -200,17 +201,19 @@ def getHousePatches(surrHouses):
         for elevPoint in surrElevation:
             if (abs(elevPoint[0] - house[1][0]) + abs(elevPoint[1] - house[1][1])) < (abs(chosenPoint[0] - house[1][0]) + abs(chosenPoint[1] - house[1][1])):
                 chosenPoint = (elevPoint[0], elevPoint[1])
-                housePolys[index] = [house[0], house[1], elevPoint[2] + houseHeight]
-                if surrHouses['Chosen'].iloc[index]: chosen = [elevPoint[2], house[2]]
+                housePolys[idx] = [house[0], house[1], elevPoint[2] + houseHeight]
+                if surrHouses['Chosen'].iloc[idx]: chosen = [elevPoint[2], house[2]]
         
-        heights.append(housePolys[index][2])
+        heights.append(housePolys[idx][2])
         chosenPoint = (0,0)
+        idx += 1
     
     surrHouses['Heights'] = pd.Series(heights).values
     
     #print(housePolys)
+    idx = 0
     max = 0
-    for index, house in housePolys:
+    for house in housePolys:
         if house[2] > max:
             max = house[2]
         
@@ -218,16 +221,18 @@ def getHousePatches(surrHouses):
         patches = []
         for i in house[0]:
             # I took out the valid shape checker, to put back ie facecolor=color_isvalid(shape)
-            if surrHouses['Chosen'].iloc[index]:
+            if surrHouses['Chosen'].iloc[idx]:
                 patch = PolygonPatch(i, facecolor=BLACK, edgecolor=BLACK, zorder=2)
-                chosen.append(surrHouses['House'].iloc[index]) 
-                chosen.append(surrHouses['Parcel'].iloc[index])
+                chosen.append(surrHouses['House'].iloc[idx]) 
+                chosen.append(surrHouses['Parcel'].iloc[idx])
             else:
                 patch = PolygonPatch(i, facecolor=BLUE, edgecolor=BLUE, zorder=2)
             patches.append(patch)
         
-        housePolys[index] = [patches, house[2]]
-                
+        housePolys[idx] = [patches, house[2]]
+            
+        idx += 1
+    
     return (housePolys, max, surrHouses, chosen)
 
 def elevationSurfaceDelta(point, surfacePts):        
@@ -391,12 +396,8 @@ deltas = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].cent
 #FINALLY, ANALYSIS, we have finalDeltas, -500-500 for each line so middle is closest
 
 weight = 1/abs(loc - len(array)/2)
-center = len(deltas[0])/2
-total = 0
+finalScore = 0
 
 for line in deltas:
-    for index, delta in enumerate(line):
-        weight = 1/abs(index - center)
-        total += weight * delta
     
-print(total/len(deltas))
+    

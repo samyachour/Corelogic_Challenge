@@ -40,9 +40,11 @@ def getData(row):
     
     nearestParcels = mimg.getBuildingPolygons(latitude, longitude, 18, 640, 640, "parcels")
     nearestParcelsDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["Polygon", "x_coord", "y_coord", "area"])
+    idx = 0
     
-    for index, i in enumerate(nearestParcels):
-        nearestParcelsDF.set_value(index, "Polygon", Polygon(i))
+    for i in nearestParcels:
+        nearestParcelsDF.set_value(idx, "Polygon", Polygon(i))
+        idx += 1
         
     for index, row in nearestParcelsDF.iterrows():
         nearestParcelsDF.set_value(index, "x_coord", row['Polygon'].centroid.x)
@@ -52,9 +54,11 @@ def getData(row):
         
     nearestPolygons = mimg.getBuildingPolygons(latitude, longitude, 18, 640, 640, "houses")
     nearestPolygonsDF = pd.DataFrame(index=range(0, len(nearestPolygons)), columns=["Polygon", "x_coord", "y_coord", "area"])
+    idx = 0
     
-    for index, i in nearestPolygons:
-        nearestPolygonsDF.set_value(index, "Polygon", Polygon(i))
+    for i in nearestPolygons:
+        nearestPolygonsDF.set_value(idx, "Polygon", Polygon(i))
+        idx += 1            
     
     for index, row in nearestPolygonsDF.iterrows():
         nearestPolygonsDF.set_value(index, "x_coord", row['Polygon'].centroid.x)

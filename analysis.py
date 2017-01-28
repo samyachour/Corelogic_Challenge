@@ -47,7 +47,7 @@ def plotLOS2D(poly, lines):
     annotateNum = 0
     for line in lines:
         for point in line:
-            if annotateNum == 1:
+            if annotateNum == 5:
                 ax.scatter(point[0], point[1])
                 ax.annotate(point[2], (point[0],point[1]))
         annotateNum += 1
@@ -297,12 +297,12 @@ def houseRoofDelta(point, housesDF):
     
 
 # TODO: deal with empty total_lvg area 45982 8
-# maybe also query corelogic data in addition to zillow and sangis? maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
+# maybe also query corelogic data in addition to zillow and sangis? maybe don't average the zillow total_lvg with the sang maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
+# TODO: deal with delta points right on border of parcel, 2, LOS2D: 3, gives one point with delta of 10.0, ie house height 15.0 - viewer height 5.0
 
 
 
-
-surrHouses, surrElevation = gather.getData(0)
+surrHouses, surrElevation = gather.getData(9) # Numbers index - 2, 0,2,9
 #plotData2D(surrHouses)
 surrHouses = getFloors(surrHouses)  
 #surrHouses.to_csv('out.csv', index=False)
@@ -399,6 +399,7 @@ deltas = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].cent
 plotLOS2D(chosenHouseNParcel[3], deltas[1])
 
 #FINALLY, ANALYSIS, we have finalDeltas, -500-500 for each line so middle is closest
+# TODO: PERFECT ANALYSIS ALGORITHM
 
 center = len(deltas[0][0])/2 + 0.0001
 total = 0

@@ -20,7 +20,8 @@ Corelogic's data included columns such as:
 Corelogic's data did not include all surrounding homes for every property. Obviously the houses on the border of this giant list of homes don't have data on all surrounding houses.
 
 So it was incomplete, and I went searching for more data.
-
+## The solution
+My goal was to output a single number that would rate the view obstruction as accurately as possible. Other solutions to the challenge included GUIs, webapps,
 ### The Found Data
 
 I used four distinct sources to solve this problem...
@@ -33,3 +34,28 @@ So we take a lat long, and create a bounding box.
 ```python    
 getElevationGoogleBox(latitude + 0.002, longitude + 0.002, latitude - 0.002, longitude - 0.002, 15, 15)
 ```
+As you can see our bounding box is 0.004&deg; (latitude) by 0.004&deg; (longitude). We also passed in "15,15" which are our column and row count.
+```python   
+def getElevationGoogleBox(lat1, long1, lat2, long2, rows, cols):
+    incrementX = abs((lat1-lat2)/cols)
+    incrementY = abs((long1-long2)/rows)
+
+    x = lat1
+    y = long1
+
+    points = []
+
+    for i in range(rows):
+        for j in range(cols):
+            points.append((x, y, getElevationGoogle(x, y)))
+            y = y - incrementY
+
+        x = x - incrementX
+        y = long1
+
+    return points
+```
+Which gives us a nice grid of ColxRow points.
+![Scatter](images/elevationPointsScatter.png)
+Which we can then map, using [matplotlib](http://matplotlib.org), as a 3D surface.
+![Surface](images/elevationSurface.png)

@@ -110,7 +110,7 @@ def Plot3DScatter(points):
         
     plt.show()
 
-Plot3DScatter(elevationPoints)
+#Plot3DScatter(elevationPoints)
 #Plot3DSurface(elevationPoints)
 #Plot3DSurfaceWithPatch(elevationPoints)
 

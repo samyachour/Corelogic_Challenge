@@ -171,18 +171,40 @@ Now we can find the data for every polygon we grabbed off google maps! Very usef
     x_bounds = (x + 450, x - 450)
     y_bounds = (y + 450, y - 450)
 
-    # plotMultiPolygon(shape) MAKE DIFF COLOR
-
     sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal WHERE "x_coord" < {} AND "x_coord" > {} AND "y_coord" < {} AND "y_coord" > {};'.format(x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1])  
     surroundingParcels = pd.read_sql(sql, engine)
 ```
 
-Now we can compare that table to our table of polygons from the maps image. For a visual aide see the [polygon data table](images/nearestPolygonsData.csv) and [properties data table](images/nearestParcelsData.csv).
+Now we can compare that table to our table of polygons from the maps image. For a visual aide see the [polygon data table](images/nearestPolygonsData.csv) versus the [properties data table](images/nearestParcelsData.csv).
 
 This is all necessary because now, we can derive the floor number!
 
 ### The Analysis
-Still need to explain:
-* floor derivation
-* 3D mapping
-* Lines of sight deltas
+We've gathered our data from our sources and organized it into a nice [pandas](http://pandas.pydata.org) dataframe - surroundingProperties let's say - that includes the surrounding houses and their shapes as well as the property information. This can be done for any row in the data, returning the dataframe of the surrounding houses.
+
+#### *Floor Derivation*
+When trying to derive the number of floors each surrounding house has, we focus on 5 factors:
+* Observed square feet - calculating the area of the polygon that we grabbed from the google maps image
+* Expected square feet - the square feet in the property information
+* Land value
+* Tax assessed value - value of home including land value
+* Bedrooms/bathrooms
+
+Clearly if our expected square feet, which includes every room for both floors (if it's a 2 story home) is much larger than our observed square feet (taken from just the geographic imprint), the house has 2 floors.
+
+So we calculate some ratios, and end up with a tuple of 3 items for each property:
+* Square feet ratio - Expected sqft/Observed sqft
+* Value ratio - (Tax assessed val - land val)/Observed sqft
+* Bed/bath - # of bedrooms + # of bathrooms
+
+So we take these three values and estimate the floor number for each home in our surroundingProperties dataframe.
+
+#### *3D Mapping*
+
+Finally, after assembling our data on elevation and surroundingProperties, we can visualize all our hard work in a pretty little 3D plot.
+
+![Homes w/ Elevation](images/homesOnElevation1.png)
+![Homes w/ Elevation](images/homesOnElevation2.png)
+![Homes w/ Elevation](images/homesOnElevation3.png)
+
+#### *Lines of Sight*

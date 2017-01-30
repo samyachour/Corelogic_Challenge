@@ -7,6 +7,7 @@ The problem was as follows:
 > Given a specific house, how can you calculate the view obstruction for the property in all directions?
 
 *They also provided a dataset of ~65000 houses to analyze.
+*Disclaimer: we had a month to complete this challenge. During this month I was also taking a class in machine learning. As a result time wasn't really on my side and the code quality isn't stellar. When I get a chance i'll go through and refactor, comment, and clean up my codebase.
 
 ### The Given Data
 

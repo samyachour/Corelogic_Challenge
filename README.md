@@ -216,8 +216,14 @@ These lines of sight consist of points every 10 feet or so, and at each point at
 
 So our algorithm looks pretty simple for roofs. We can interpret the point's position just in terms of X and Y (still in stateplane) and then cycle through the house polygons and see if the point is inside.
 
-Elevation is a bit more tricky. For every point there are a total of 3 points nearby, creating a triangle. Using some math we calculate the distance from the point to the plane that is created by the 3 points in 3 dimensions. We end up with a line of sight with deltas like this:
+Elevation is a bit more tricky. For every point there are a total of 3 points nearby, creating a triangle. Using some math we calculate the distance from the point to the plane that is created by the 3 points in 3 dimensions.
+
+After our calculations we end up with a line of sight with deltas like this:
 ![Lines of sight w/ deltas](images/linesOfSightDeltas.png)
 
 #### *Calculation*
-The final calculation we need to do is just derive our view obstruction from the lines of sight. This can be done many ways. For the sake of time I 
+The final calculation we need to do is just derive our view obstruction from the lines of sight. This can be done many ways. For the sake of time I have chosen the simplest path (for the time being).
+
+To add up all the deltas we take into account their distance from the property. The farther they are the less they are worth, since objects closer to you take up more of your FOV. Using these weights we add up all the lines of sight and their deltas. Then we average it and voila, view obstruction calculation!
+
+### Going Forward

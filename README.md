@@ -201,10 +201,23 @@ So we take these three values and estimate the floor number for each home in our
 
 #### *3D Mapping*
 
-Finally, after assembling our data on elevation and surroundingProperties, we can visualize all our hard work in a pretty little 3D plot.
+Finally, after assembling our data on elevation and surroundingProperties, we can visualize all our hard work in a pretty little 3D plot. All the shapes are accurate to the those houses layouts, and the height of the polygon is roughly at the height of each roof. If it's a 1 story home we put it 15 ft above it's elevation, if it's a 2 story home we put it 23 ft above it's elevation.
+
+We find the elevation for each property by looking at its centroid and finding the nearest elevation point.
 
 ![Homes w/ Elevation](images/homesOnElevation1.png)
 ![Homes w/ Elevation](images/homesOnElevation2.png)
 ![Homes w/ Elevation](images/homesOnElevation3.png)
 
 #### *Lines of Sight*
+Lastly, to actual get the calculation of view obstruction, we use a pretty intuitive technique. At 5 feet above the property elevation (approximately eye level) we shoot out lines of sight in all directions.
+![Lines of sight](images/linesOfSight.png)
+These lines of sight consist of points every 10 feet or so, and at each point at it's respective elevation we calculate the LOS delta. The LOS delta is simple the difference between that point's elevation, and the elevation of the object directly above or below it. The object can either be a triangular elevation plane or the roof of a house.
+
+So our algorithm looks pretty simple for roofs. We can interpret the point's position just in terms of X and Y (still in stateplane) and then cycle through the house polygons and see if the point is inside.
+
+Elevation is a bit more tricky. For every point there are a total of 3 points nearby, creating a triangle. Using some math we calculate the distance from the point to the plane that is created by the 3 points in 3 dimensions. We end up with a line of sight with deltas like this:
+![Lines of sight w/ deltas](images/linesOfSightDeltas.png)
+
+#### *Calculation*
+The final calculation we need to do is just derive our view obstruction from the lines of sight. This can be done many ways. For the sake of time I 

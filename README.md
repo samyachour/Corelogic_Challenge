@@ -100,7 +100,7 @@ To convert out outlines from pixel coordinates to lat/long (and then subsequentl
 
 To interpret all these polygons I used [shapely](http://toblerity.org/shapely/). We can map the houses and their lots in stateplane coordinates:
 ![Houses and Lots](images/houses&Lots.png)
-The red polygon is red because that's an indication that it's not valid - ie it's got some weird hole or corner that screws it up. Still workable though.
+The red polygon is red because that's an indication that it's not valid - i.e. it's got some weird hole or corner that screws it up. Still workable though.
 
 #### *3. Zillow API*
 The [Zillow API](http://www.zillow.com/howto/api/APIOverview.htm) takes in an address and gives back a bunch of information about the property. This helped me supplement the data given to us by Corelogic because I can learn about the existing and missing houses' information. I used the python Zillow API wrapper [pyzillow](https://pypi.python.org/pypi/pyzillow/0.5.5) to grab the data.
@@ -222,8 +222,14 @@ After our calculations we end up with a line of sight with deltas like this:
 ![Lines of sight w/ deltas](images/linesOfSightDeltas.png)
 
 #### *Calculation*
-The final calculation we need to do is just derive our view obstruction from the lines of sight. This can be done many ways. For the sake of time I have chosen the simplest path (for the time being).
+The final calculation we need to do is just derive our view obstruction from the lines of sight. This can be done many ways. For the moment I have chosen the simplest path.
 
 To add up all the deltas we take into account their distance from the property. The farther they are the less they are worth, since objects closer to you take up more of your FOV. Using these weights we add up all the lines of sight and their deltas. Then we average it and voila, view obstruction calculation!
 
 ### Going Forward
+While I am confident my solution is quite comprehensive, there are still many things I can do to improve it:
+* Perfect my floor derivation algorithm, even though i'm sure Corelogic has that information in house
+* Consider view quality, i.e. if it was of the ocean or a monument. The ocean one is easy since the ocean's elevation is 0.
+* Improve my analysis of the lines of sight deltas - really do the math involved with it
+
+Thanks for reading!

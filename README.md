@@ -229,7 +229,7 @@ To add up all the deltas we take into account their distance from the property. 
 
 ### Going Forward
 While I am confident my solution is quite comprehensive, there are still many things I can do to improve it:
-* Perfect my floor derivation algorithm, even though i'm sure Corelogic has that information in house
+* Perfect my floor derivation algorithm, even though i'm sure Corelogic has that information in house (no pun intended)
 * Consider view quality, i.e. if it was of the ocean or a monument. The ocean one is easy since the ocean's elevation is 0.
 * Improve my analysis of the lines of sight deltas - really do the math involved with it
 

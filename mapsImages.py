@@ -62,8 +62,8 @@ def getBuildingPolygons(lat, long, zoom, w, h, polys):
     contoursBuildings = find_contours(binary_imageBuildings, 0.1)
        
     
-    #fig, ax = plt.subplots()
-    #ax.imshow(imgBuildings, interpolation='nearest', cmap=plt.cm.gray)
+    fig, ax = plt.subplots()
+    ax.imshow(binary_imageBuildings, interpolation='nearest', cmap=plt.cm.gray)
     
     
     surroundingPolygons = []
@@ -72,7 +72,7 @@ def getBuildingPolygons(lat, long, zoom, w, h, polys):
         
         coords = approximate_polygon(contour, tolerance=3.5)
         if len(coords) >= 4:
-            # TO make sure we don't get house polygons that are cut off
+            # to make sure we don't get house polygons that are cut off
             if not any(0.0 in subl for subl in coords):
                 if not any(639.0 in subl for subl in coords):
                     yValues = []
@@ -80,15 +80,15 @@ def getBuildingPolygons(lat, long, zoom, w, h, polys):
                         yValues.append(i[0])
                     #because we cropped the image, 640-22 = 618
                     if 617.0 not in yValues:
-                        #ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=2)
+                        ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=2)
                         surroundingPolygons.append(coords)
     
-    '''
+    
     ax.axis('image')
     ax.set_xticks([])
     ax.set_yticks([])
     plt.show()
-    '''
+    
     
     
     centerPoint = MercatorProjection.G_LatLng(lat, long)
@@ -105,7 +105,7 @@ def getBuildingPolygons(lat, long, zoom, w, h, polys):
             
     return housePolygons
     
-#getBuildingPolygons(33.167624126720625, -117.3294706444691, 18, 640, 640, "houses")
+getBuildingPolygons(32.872112, -117.249232, 18, 640, 640, "parcels")
 #getBuildingPolygons(32.8721, -117.249, 18, 640, 640, "houses")
 
 # https://maps.googleapis.com/maps/api/staticmap?

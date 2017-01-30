@@ -20,8 +20,11 @@ Corelogic's data included columns such as:
 Corelogic's data did not include all surrounding homes for every property. Obviously the houses on the border of this giant list of homes don't have data on all surrounding houses.
 
 So it was incomplete, and I went searching for more data.
+#
+#
+#
 ## The solution
-My goal was to output a single number that would rate the view obstruction as accurately as possible. Other solutions to the challenge included GUIs, webapps,
+My goal was to output a single number that would rate the view obstruction as accurately as possible. Other solutions to the challenge included GUIs and webapps, but my philosophy was, "this is a data science challenge, let's just analyze the data as accurately as possible."
 ### The Found Data
 
 I used four distinct sources to solve this problem...
@@ -59,3 +62,40 @@ Which gives us a nice grid of ColxRow points.
 ![Scatter](images/elevationPointsScatter.png)
 Which we can then map, using [matplotlib](http://matplotlib.org), as a 3D surface.
 ![Surface](images/elevationSurface.png)
+
+You can see the X and Y axes aren't in Lat/Long. This is because for this project it was easiest to convert everything to [stateplane](https://en.wikipedia.org/wiki/State_Plane_Coordinate_System). You can read more in the link provided, but basically it's a 2D coordinate system that divides states into zones where every zone has an origin. The coordinates are in feet and are all positive relative to the chosen origin for that zone. The zone we are in for La Jolla is [California Stateplane Zone 6](http://spatialreference.org/ref/epsg/2227/). We used [pyproj.Proj](https://jswhit.github.io/pyproj/pyproj.Proj-class.html) to convert the coordinates.
+
+#### *Google Static Maps API*
+The google static maps API takes in a lat/long, zoom, image format/type, and many other parameters to spit out a basic satellite image. Luckily we only call this API once per property.
+
+The sleight of hand trick here is styling the image. You can grab an roadmap-type image that outlines the roads, lots, and houses for you, and then process it using an image segmentation library. The styling is built into the google static maps API.
+
+For image segmentation I used [scikit-image](http://scikit-image.org). After cropping the google watermark, converting the image to gray scale, and separating sections of the image based on their grayscale, we get this:
+![Binary Image](images/binaryImageBuildings.png)
+
+Then, using [find_contours](http://scikit-image.org/docs/dev/api/skimage.measure.html?highlight=find_contours#skimage.measure.find_contours) we can get the outlines of all these shapes in terms of pixel coordinates. We ignore the shapes that are cut off by the edge of the image:
+```python    
+contoursBuildings = find_contours(binary_imageBuildings, 0.1)
+surroundingPolygons = []
+
+for n, contour in enumerate(contoursBuildings):
+        coords = approximate_polygon(contour, tolerance=3.5)
+        if len(coords) >= 4:
+            # to make sure we don't get house polygons that are cut off
+            if not any(0.0 in subl for subl in coords):
+                if not any(639.0 in subl for subl in coords):
+                    yValues = []
+                    for i in coords:
+                        yValues.append(i[0])
+                    #because we cropped the image, 640-22 = 618
+                    if 617.0 not in yValues:
+                        surroundingPolygons.append(coords)
+```
+And we get:
+![House Contours](images/buildingContours.png)
+We can play with the tolerance value to accomodate for weird shapes.
+
+So now that we have the outlines of all the surrounding houses in pixel coordinates, we can do the same for the lots:
+![Lot Contours](images/lotContours.png)
+
+To convert out outlines from pixel coordinates to lat/long (and then subsequently to stateplane) we use [Mercator Projection](https://en.wikipedia.org/wiki/Mercator_projection#Derivation_of_the_Mercator_projection). I won't get into that now but it's basically a way to wrap a cylinder around our spherical earth, and then unwrap that cylinder into a 2D map. On a large scale it distorts the sizes of land masses, but for our purposes it shouldn't be a problem.

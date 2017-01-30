@@ -96,7 +96,9 @@ We can play with the tolerance value to accomodate for weird shapes.
 So now that we have the outlines of all the surrounding houses in pixel coordinates, we can do the same for the lots:
 ![Lot Contours](images/lotContours.png)
 
-To convert out outlines from pixel coordinates to lat/long (and then subsequently to stateplane) we use [Mercator Projection](https://en.wikipedia.org/wiki/Mercator_projection#Derivation_of_the_Mercator_projection). I won't get into that now but it's basically a way to wrap a cylinder around our spherical earth, and then unwrap that cylinder into a 2D map. On a large scale it distorts the sizes of land masses, but for our purposes it shouldn't be a problem. We can map the houses and their lots in stateplane coordinates:
+To convert out outlines from pixel coordinates to lat/long (and then subsequently to stateplane) we use [Mercator Projection](https://en.wikipedia.org/wiki/Mercator_projection#Derivation_of_the_Mercator_projection). I won't get into that now but it's basically a way to wrap a cylinder around our spherical earth, and then unwrap that cylinder into a 2D map. On a large scale it distorts the sizes of land masses, but for our purposes it shouldn't be a problem.
+
+To interpret all these polygons I used [shapely](http://toblerity.org/shapely/). We can map the houses and their lots in stateplane coordinates:
 ![Houses and Lots](images/houses&Lots.png)
 The red polygon is just red because that's an indication that it's not valid - ie it's got some weird hole or corner that screws it up. Still workable though.
 
@@ -120,4 +122,65 @@ The Zillow data for a property isn't always available. The number of floors spec
 #### *4. SanGIS*
 The [SanGIS](http://www.sangis.org) data was a godsend. There were an overwhelming amount of missing values in the corelogic data (surrounding houses as well as existing features) even when supplemented by the Zillow API. Luckily, the San Diego government provides free datasets on all the properties in San Diego County. This comes in the form of a 4GB [shapefile](https://en.wikipedia.org/wiki/Shapefile). The shapefile is basically a way to store geographic/geometric vector information and assign a data table to the shapes.
 
-The data included information for almost every property we needed. 4GB is way to big to load into RAM when we run our code in Spyder, so I had to import it into a local [PostgreSQL](https://www.postgresql.org) database (which  included the extension [PostGIS](http://www.postgis.net) that allows us to store geographic objects and run SQL queries on them).
+The data included information for almost every property we needed. 4GB is way to big to load into RAM when we run our code in Spyder, so I had to import it into a local [PostgreSQL](https://www.postgresql.org) database (which  included the extension [PostGIS](http://www.postgis.net) that allows us to store geographic objects and run SQL queries on them). The SanGIS data, for each property, included columns like:
+
+* APN
+* Address
+* Square footage
+* Tax value
+* Land value
+* Bed/bath
+* GEOM - the geometric shape of the parcel in stateplane coordinates
+
+If we want to find the data on each house/lot that we grabbed from the google maps image we need to be able to compare the image polygons to our SanGIS polygons. We can already easily grab the centroids for our house polygons in stateplane from the maps image using the shapely [centroid](http://toblerity.org/shapely/manual.html#object.centroid) function. However to run a SQL query on our SanGIS geometry data we need to have a column to query! We can't query the geom column because we would need to programmatically grab the centroid from each shape. Instead, we can create 2 columns for the X and Y values of each property's centroid.
+```python
+def getCentroids():
+    engine = create_engine('postgresql://@localhost:5432/parcels')
+    sql3 = """ALTER TABLE parcelterminal ADD x_coord GEOMETRY;"""
+    sql4 = """ALTER TABLE parcelterminal ADD y_coord GEOMETRY;"""
+    engine.connect().execute(sql3)
+    engine.connect().execute(sql4)
+
+    for i in range(1, 1061753):
+        sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal WHERE "id" = {};'.format(i)
+        data = pd.read_sql(sql, engine)
+        shape = wkt.loads(data['st_astext'].iloc[0])
+        centroid = shape.centroid.wkt
+        sql1 = """
+        UPDATE public.parcelterminal
+        SET x_coord = ST_GeometryFromText('{}', 2230)
+        WHERE id = {};
+        """.format(centroid.x, i)
+        engine.connect().execute(sql1)
+        sql2 = """
+        UPDATE public.parcelterminal
+        SET y_coord = ST_GeometryFromText('{}', 2230)
+        WHERE id = {};
+        """.format(centroid.y, i)
+        engine.connect().execute(sql2)
+```
+
+Now we can find the data for every polygon we grabbed off google maps! Very useful. But for the sake of speed we'll grab the nearest properties in the table compared to our chosen house.
+
+```python
+    sql = 'SELECT * FROM public.parcelterminal WHERE "apn" = \'{}\';'.format(APN.replace("-", ""))
+    parcel = pd.read_sql(sql, engine)
+
+    x = parcel['x_coord'].iloc[0]
+    y = parcel['y_coord'].iloc[0]
+    x_bounds = (x + 450, x - 450)
+    y_bounds = (y + 450, y - 450)
+
+    # plotMultiPolygon(shape) MAKE DIFF COLOR
+
+    sql = 'SELECT *, ST_AsText("geom") FROM public.parcelterminal WHERE "x_coord" < {} AND "x_coord" > {} AND "y_coord" < {} AND "y_coord" > {};'.format(x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1])  
+    surroundingParcels = pd.read_sql(sql, engine)
+```
+
+Now we can compare that table to our table of polygons from the maps image. This is all necessary because now, we can derive the floor number!
+
+### The Analysis
+Still need to explain:
+* floor derivation
+* 3D mapping
+* Lines of sight deltas

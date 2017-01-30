@@ -396,7 +396,7 @@ deltas = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].cent
 #if chosenHouseNParcel[1] == 2:
 #    result += getSlopes((chosenHouseNParcel[2][0].centroid.x, chosenHouseNParcel[2][0].centroid.y, chosenHouseNParcel[0] + 15))[0]
 
-plotLOS2D(chosenHouseNParcel[3], deltas[1])
+#plotLOS2D(chosenHouseNParcel[3], deltas[1])
 
 #FINALLY, ANALYSIS, we have finalDeltas, -500-500 for each line so middle is closest
 # TODO: PERFECT ANALYSIS ALGORITHM

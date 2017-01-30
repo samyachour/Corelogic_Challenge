@@ -20,9 +20,7 @@ Corelogic's data included columns such as:
 Corelogic's data did not include all surrounding homes for every property. Obviously the houses on the border of this giant list of homes don't have data on all surrounding houses.
 
 So it was incomplete, and I went searching for more data.
-#
-#
-#
+
 ## The solution
 My goal was to output a single number that would rate the view obstruction as accurately as possible. Other solutions to the challenge included GUIs and webapps, but my philosophy was, "this is a data science challenge, let's just analyze the data as accurately as possible."
 ### The Found Data
@@ -98,4 +96,5 @@ We can play with the tolerance value to accomodate for weird shapes.
 So now that we have the outlines of all the surrounding houses in pixel coordinates, we can do the same for the lots:
 ![Lot Contours](images/lotContours.png)
 
-To convert out outlines from pixel coordinates to lat/long (and then subsequently to stateplane) we use [Mercator Projection](https://en.wikipedia.org/wiki/Mercator_projection#Derivation_of_the_Mercator_projection). I won't get into that now but it's basically a way to wrap a cylinder around our spherical earth, and then unwrap that cylinder into a 2D map. On a large scale it distorts the sizes of land masses, but for our purposes it shouldn't be a problem.
+To convert out outlines from pixel coordinates to lat/long (and then subsequently to stateplane) we use [Mercator Projection](https://en.wikipedia.org/wiki/Mercator_projection#Derivation_of_the_Mercator_projection). I won't get into that now but it's basically a way to wrap a cylinder around our spherical earth, and then unwrap that cylinder into a 2D map. On a large scale it distorts the sizes of land masses, but for our purposes it shouldn't be a problem. We can map the houses and their lots in stateplane coordinates:
+![Houses and Lots](images/houses&Lots.png)

@@ -119,17 +119,17 @@ def getData(row):
     plotMultiPolygon(shapes[0])
     """
     
-    
+    #"""
     zillow_data = ZillowWrapper("X1-ZWz1fm3nv90ft7_aovt1")
     
-    """
+    '''
     try: 
         deep_search_response = zillow_data.get_deep_search_results(address, zipcode)
         result = GetDeepSearchResults(deep_search_response)
         print("Home size: " + str(result.home_size) + " " + str(result.home_type) + " Bedrooms: " + str(result.bedrooms) + " Bathrooms: " + str(result.bathrooms))
     except:
         print("ZZillow couldn't find the house")
-    """
+    '''
     
     
     #so we have nearestParcelsDF, nearestParcelsData, house, lat/long, nearestPolygonsDF, and elevationPoints (all in SP)
@@ -261,5 +261,6 @@ def getData(row):
     returnDF = returnDF.dropna(how='all')    
     #returnDF.to_csv('out.csv', index=False)
     return (returnDF, elevationPoints)
+    #"""
     
 #getData(0)

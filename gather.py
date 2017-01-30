@@ -37,7 +37,7 @@ def getData(row):
     latitude = house['PARCEL LEVEL LATITUDE']
     longitude = house['PARCEL LEVEL LONGITUDE']
     nearestParcelsData = pgis.findNearestParcels(house['FORMATTED APN'])
-    
+
     nearestParcels = mimg.getBuildingPolygons(latitude, longitude, 18, 640, 640, "parcels")
     nearestParcelsDF = pd.DataFrame(index=range(0, len(nearestParcels)), columns=["Polygon", "x_coord", "y_coord", "area"])
     idx = 0
@@ -64,7 +64,6 @@ def getData(row):
         nearestPolygonsDF.set_value(index, "x_coord", row['Polygon'].centroid.x)
         nearestPolygonsDF.set_value(index, "y_coord", row['Polygon'].centroid.y)
         nearestPolygonsDF.set_value(index, "area", row['Polygon'].area)
-    
     
     #Box: 32.873320, -117.250975 to 32.871759, -117.248062
     elevationPoints_ = elev.getElevationGoogleBox(latitude + 0.002, longitude + 0.002, latitude - 0.002, longitude - 0.002, 15, 15)

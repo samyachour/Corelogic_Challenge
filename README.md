@@ -10,14 +10,14 @@ The problem was as follows:
 
 ### The Given Data
 
-Corelogic's data included columns such as:
+[Corelogic's data](images/corelogicDataExample.csv) included columns such as:
 
 * Formatted APN (property ID)
 * Lat/Long
 * Address
 * Square footage
 
-Corelogic's data did not include all surrounding homes for every property. Obviously the houses on the border of this giant list of homes don't have data on all surrounding houses.
+Corelogic's data did not include all surrounding homes for every property. Obviously the houses on the border of this giant list of homes don't have data on all their surrounding houses.
 
 So it was incomplete, and I went searching for more data.
 
@@ -66,7 +66,7 @@ You can see the X and Y axes aren't in Lat/Long. This is because for this projec
 #### *2. Google Static Maps API*
 The google static maps API takes in a lat/long, zoom, image format/type, and many other parameters to spit out a basic satellite image. Luckily we only call this API once per property.
 
-The sleight of hand trick here is styling the image. You can grab an roadmap-type image that outlines the roads, lots, and houses for you, and then process it using an image segmentation library. The styling is built into the google static maps API.
+The sleight of hand trick here is styling the image. You can grab an roadmap-type image that strips away the satellite image and leaves the roads, lots, and houses for you (like you would see on a paper map), and then process it using an image segmentation library. The styling is built into the google static maps API.
 
 For image segmentation I used [scikit-image](http://scikit-image.org). After cropping the google watermark, converting the image to gray scale, and separating sections of the image based on their grayscale, we get this:
 ![Binary Image](images/binaryImageBuildings.png)
@@ -100,7 +100,7 @@ To convert out outlines from pixel coordinates to lat/long (and then subsequentl
 
 To interpret all these polygons I used [shapely](http://toblerity.org/shapely/). We can map the houses and their lots in stateplane coordinates:
 ![Houses and Lots](images/houses&Lots.png)
-The red polygon is just red because that's an indication that it's not valid - ie it's got some weird hole or corner that screws it up. Still workable though.
+The red polygon is red because that's an indication that it's not valid - ie it's got some weird hole or corner that screws it up. Still workable though.
 
 #### *3. Zillow API*
 The [Zillow API](http://www.zillow.com/howto/api/APIOverview.htm) takes in an address and gives back a bunch of information about the property. This helped me supplement the data given to us by Corelogic because I can learn about the existing and missing houses' information. I used the python Zillow API wrapper [pyzillow](https://pypi.python.org/pypi/pyzillow/0.5.5) to grab the data.
@@ -177,7 +177,9 @@ Now we can find the data for every polygon we grabbed off google maps! Very usef
     surroundingParcels = pd.read_sql(sql, engine)
 ```
 
-Now we can compare that table to our table of polygons from the maps image. This is all necessary because now, we can derive the floor number!
+Now we can compare that table to our table of polygons from the maps image. For a visual aide see the [polygon data table](images/nearestPolygonsData.csv) and [properties data table](images/nearestParcelsData.csv).
+
+This is all necessary because now, we can derive the floor number!
 
 ### The Analysis
 Still need to explain:

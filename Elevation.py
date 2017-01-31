@@ -1,11 +1,6 @@
 import requests
 import pyproj
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d, Axes3D
-from matplotlib import cm
-from matplotlib.ticker import MaxNLocator
-import mpl_toolkits.mplot3d.art3d as art3d
-from matplotlib.patches import Circle, PathPatch
+import plot
 
 def convertSPLL(x, y):
     state_plane = pyproj.Proj(init='EPSG:2230', preserve_units=True)
@@ -35,95 +30,15 @@ elevationPoints = [(6255641.617853947, 1899467.5493054085, 325.34979822146073), 
 googleBox = [(33.074657, -117.207794, 148.2841796875), (33.074657, -117.207794, 148.2841796875), (33.074657, -117.20799600000001, 147.4058227539062), (33.074657, -117.20819800000001, 147.7142791748047), (33.074657, -117.20840000000001, 146.1806335449219), (33.074657, -117.20860200000001, 142.0865325927734), (33.0745384, -117.207794, 147.398681640625), (33.0745384, -117.20799600000001, 146.9870300292969), (33.0745384, -117.20819800000001, 146.7901611328125), (33.0745384, -117.20840000000001, 145.4457702636719), (33.0745384, -117.20860200000001, 141.5194244384766), (33.0744198, -117.207794, 146.5807495117188), (33.0744198, -117.20799600000001, 146.2197875976562), (33.0744198, -117.20819800000001, 144.9052124023438), (33.0744198, -117.20840000000001, 143.4487609863281), (33.0744198, -117.20860200000001, 140.8649291992188), (33.0743012, -117.207794, 145.7697448730469), (33.0743012, -117.20799600000001, 144.6278228759766), (33.0743012, -117.20819800000001, 143.2326507568359), (33.0743012, -117.20840000000001, 142.426025390625), (33.0743012, -117.20860200000001, 141.0009155273438), (33.0741826, -117.207794, 144.79541015625), (33.0741826, -117.20799600000001, 143.2988433837891), (33.0741826, -117.20819800000001, 143.0630035400391), (33.0741826, -117.20840000000001, 142.8155212402344), (33.0741826, -117.20860200000001, 141.0392150878906)]
 MSDNBox = [(33.074657, -117.207794, 150), (33.074657, -117.207794, 150), (33.074657, -117.20799600000001, 148), (33.074657, -117.20819800000001, 147), (33.074657, -117.20840000000001, 145), (33.074657, -117.20860200000001, 142), (33.0745384, -117.207794, 149), (33.0745384, -117.20799600000001, 148), (33.0745384, -117.20819800000001, 146), (33.0745384, -117.20840000000001, 145), (33.0745384, -117.20860200000001, 142), (33.0744198, -117.207794, 149), (33.0744198, -117.20799600000001, 147), (33.0744198, -117.20819800000001, 146), (33.0744198, -117.20840000000001, 144), (33.0744198, -117.20860200000001, 142), (33.0743012, -117.207794, 148), (33.0743012, -117.20799600000001, 147), (33.0743012, -117.20819800000001, 145), (33.0743012, -117.20840000000001, 144), (33.0743012, -117.20860200000001, 142), (33.0741826, -117.207794, 148), (33.0741826, -117.20799600000001, 146), (33.0741826, -117.20819800000001, 145), (33.0741826, -117.20840000000001, 143), (33.0741826, -117.20860200000001, 141)]
 
-def Plot3DTriSurf(points):
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    x = []
-    y = []
-    z = []
-    
-    for coord in points:
-        x.append(coord[0])
-        y.append(coord[1])
-        z.append(coord[2] * 3)
-        
-        
-    ax.plot_trisurf(x, y, z, linewidth=0.2)
-    plt.show()
-    
-#Plot3DTriSurf(elevationPoints)
+#plot.Plot3DTriSurf(elevationPoints)
 
-def Plot3DSurface(points):
-    Xs, Ys, Zs = [], [], []
-    
-    for i in points:
-        Xs.append(i[0])
-        Ys.append(i[1])
-        Zs.append(i[2])
-    
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    
-    surf = ax.plot_trisurf(Xs, Ys, Zs, cmap=cm.jet, linewidth=0)
-    fig.colorbar(surf)
-    
-    ax.xaxis.set_major_locator(MaxNLocator(5))
-    ax.yaxis.set_major_locator(MaxNLocator(6))
-    ax.zaxis.set_major_locator(MaxNLocator(5))
-    
-    fig.tight_layout()
-            
-    plt.show()
-    
-def Plot3DSurfaceWithPatch(points):
-    Xs, Ys, Zs = [], [], []
-    
-    for i in points:
-        Xs.append(i[0])
-        Ys.append(i[1])
-        Zs.append(i[2])
-    
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    
-    surf = ax.plot_trisurf(Xs, Ys, Zs, cmap=cm.jet, linewidth=0)
-    fig.colorbar(surf)
-    
-    p = Circle((Xs[0], Ys[0]), 100)
-    ax.add_patch(p)
-    art3d.pathpatch_2d_to_3d(p, z=Zs[0], zdir="z")
-    
-    ax.xaxis.set_major_locator(MaxNLocator(5))
-    ax.yaxis.set_major_locator(MaxNLocator(6))
-    ax.zaxis.set_major_locator(MaxNLocator(5))
-    
-    fig.tight_layout()
-            
-    plt.show()    
-    
-def Plot3DScatter(points):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    
-    for coord in points:
-        ax.scatter(coord[0], coord[1], coord[2])
-        
-    plt.show()
+#plot.lot3DScatter(elevationPoints)
+#plot.Plot3DSurface(elevationPoints)
+#plot.Plot3DSurfaceWithPatch(elevationPoints)
 
-#Plot3DScatter(elevationPoints)
-#Plot3DSurface(elevationPoints)
-#Plot3DSurfaceWithPatch(elevationPoints)
 
-def Plot3DScatterSP(points):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
     
-    for coord in points:
-        ax.scatter(convertLLSP(coord[0], coord[1])[0], convertLLSP(coord[0], coord[1])[1], coord[2])
-        
-    plt.show()
-    
-#Plot3DScatterSP(googleBox)
+#plot.Plot3DScatterSP(googleBox)
 
 #MSDN ELevation
 
@@ -160,7 +75,7 @@ def getElevationMSDNBoxManual(lat1, long1, lat2, long2, rows, cols):
         x = x - incrementX
         y = long1
     
-    Plot3DScatter(points)
+    plot.Plot3DScatter(points)
 
 #getElevationMSDNBoxManual(33.074657, -117.207794, 33.074064, -117.206784, 15, 15)
 
@@ -190,7 +105,7 @@ def getElevationGoogleBox(lat1, long1, lat2, long2, rows, cols):
         x = x - incrementX
         y = long1
     
-    #Plot3DScatter(points)
+    #plot.Plot3DScatter(points)
     return points
     
 #getElevationGoogleBox(32.872112 + 0.0015, -117.249232 + 0.0015, 32.872112 - 0.0015, -117.249232 - 0.0015, 25, 25))
@@ -213,4 +128,4 @@ def getElevationGoogleBoxSP(spx1, spy1, spx2, spy2, rows, cols):
         x = x - incrementX
         y = long1
     
-    Plot3DScatter(points)
+    plot.Plot3DScatter(points)

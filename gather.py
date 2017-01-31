@@ -1,34 +1,16 @@
 import pandas as pd
 from shapely.geometry import Polygon
 from shapely import wkt
-from matplotlib import pyplot as plt
-from descartes.patch import PolygonPatch
 
-from figures import BLUE, SIZE, plot_coords, color_isvalid
 import mapsImages as mimg
 import Elevation as elev
 import pythonShapefilePostGIS as pgis
 import numpy as np
+import plot
 np.set_printoptions(threshold=np.nan)
 pd.set_option('display.max_columns', 500)
 
 from pyzillow.pyzillow import ZillowWrapper, GetDeepSearchResults, GetUpdatedPropertyDetails
-
-def plotMultiPolygon(shape):
-    fig = plt.figure(1, figsize=SIZE, dpi=90)
-    ax = fig.add_subplot(121)
-    if str(type(shape)) == "<class 'shapely.geometry.multipolygon.MultiPolygon'>":
-        for polygon in shape:
-            plot_coords(ax, polygon.exterior, alpha=0)
-            patch = PolygonPatch(polygon, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), alpha=0.5, zorder=2)
-            ax.add_patch(patch)
-    
-    if str(type(shape)) == "<class 'shapely.geometry.polygon.Polygon'>":
-        plot_coords(ax, shape.exterior, alpha=0)
-        patch = PolygonPatch(shape, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), alpha=0.5, zorder=2)
-        ax.add_patch(patch)
-        
-    #ax.set_title('Polygon')
 
 def getData(row):
     coreLogic = pd.read_csv("../CorelogicResources/Corelogic_houses_csv.csv")
@@ -77,16 +59,14 @@ def getData(row):
         elevationPoints.append((sp[0], sp[1], point[2] * 3.2808399))
     
     '''
+    # Plotting 2D
     for index, row in nearestParcelsDF.iterrows():
-        plotMultiPolygon(row['Polygon'])
+        plot.plotMultiPolygon(row['Polygon'])
     
     for index, row in nearestPolygonsDF.iterrows():
-        plotMultiPolygon(row['Polygon'])
+        plot.plotMultiPolygon(row['Polygon'])
     '''
         
-    # TODO: deal with shapes touching 0 3, 45982 25-26, if you put 1 as the row you want, it doesn't work cause that's the house that's touching another
-    # TODO: deal with border houses that still barely touch a parcel (plot 45982), they don't matter cause they're far away fron chosen house
-    
     """
     # Testing
     test = nearestPolygonsDF.iloc[11]
@@ -114,8 +94,8 @@ def getData(row):
     print(areas)
     print(address)
     print(rooms)
-    plotMultiPolygon(shapes[1])
-    plotMultiPolygon(shapes[0])
+    plot.plotMultiPolygon(shapes[1])
+    plot.plotMultiPolygon(shapes[0])
     """
     
     #"""

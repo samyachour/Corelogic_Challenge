@@ -12,80 +12,6 @@ import numpy as np
 from matplotlib import cm
 from matplotlib.ticker import MaxNLocator
 import mpl_toolkits.mplot3d.art3d as art3d
-
-def plotMultiPolygon(shape):
-    fig = plt.figure(1, figsize=SIZE, dpi=90)
-    ax = fig.add_subplot(121)
-    if str(type(shape)) == "<class 'shapely.geometry.multipolygon.MultiPolygon'>":
-        for polygon in shape:
-            plot_coords(ax, polygon.exterior, alpha=0)
-            patch = PolygonPatch(polygon, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), alpha=0.5, zorder=2)
-            ax.add_patch(patch)
-    
-    if str(type(shape)) == "<class 'shapely.geometry.polygon.Polygon'>":
-        plot_coords(ax, shape.exterior, alpha=0)
-        patch = PolygonPatch(shape, facecolor=color_isvalid(shape), edgecolor=color_isvalid(shape, valid=BLUE), alpha=0.5, zorder=2)
-        ax.add_patch(patch)
-        
-    ax.set_title('Polygon')
-
-def plotData2D(data):
-    
-    for index, row in data.iterrows():
-        plotMultiPolygon(row['Parcel'])
-        for i in row['House']:
-            plotMultiPolygon(i)
-            
-def plotLOS2D(poly, lines):
-    fig = plt.figure(1, figsize=SIZE, dpi=90)
-    ax = fig.add_subplot(121)
-    
-    plot_coords(ax, poly.exterior, alpha=0)
-    patch = PolygonPatch(poly, facecolor=color_isvalid(poly), edgecolor=color_isvalid(poly, valid=BLUE), alpha=0.5, zorder=2)
-    ax.add_patch(patch)
-    
-    annotateNum = 0
-    for line in lines:
-        for point in line:
-            if annotateNum == 5:
-                ax.scatter(point[0], point[1])
-                ax.annotate(point[2], (point[0],point[1]))
-        annotateNum += 1
-            
-    plt.show()
-            
-def Plot3DSurfaceWithPatches(points, patches, height, lines=[]):
-    Xs, Ys, Zs = [], [], []
-    
-    for i in points:
-        Xs.append(i[0])
-        Ys.append(i[1])
-        Zs.append(i[2])
-    
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    
-    surf = ax.plot_trisurf(Xs, Ys, Zs, cmap=cm.jet, linewidth=0)
-    fig.colorbar(surf)
-    
-    for i in patches:
-        for j in i[0]:
-            ax.add_patch(j)
-            art3d.pathpatch_2d_to_3d(j, z=i[1], zdir="z")
-    
-    for line in lines:
-        for point in line:
-            ax.scatter(point[0], point[1], point[2])
-            
-    ax.xaxis.set_major_locator(MaxNLocator(5))
-    ax.yaxis.set_major_locator(MaxNLocator(6))
-    ax.zaxis.set_major_locator(MaxNLocator(5))
-    
-    ax.set_zlim3d(0,height)
-    
-    #fig.tight_layout()
-            
-    plt.show()
     
 def getRatios(data):
     
@@ -294,21 +220,15 @@ def houseRoofDelta(point, housesDF):
                     return row['Heights'] - point[2]
         
         return None    
-    
-
-# TODO: deal with empty total_lvg area 45982 8
-# maybe also query corelogic data in addition to zillow and sangis? maybe don't average the zillow total_lvg with the sang maybe work with land value rations? take into account how much of the house takes over the parcel, take care of 0s in property value or square feet
-# TODO: deal with delta points right on border of parcel, 2, LOS2D: 3, gives one point with delta of 10.0, ie house height 15.0 - viewer height 5.0
-# TODO: make lines of sight uniform in pointNum
 
 
 surrHouses, surrElevation = gather.getData(0) # Numbers index - 2, 0,2,9
-#plotData2D(surrHouses)
+#plot.plotData2D(surrHouses)
 surrHouses = getFloors(surrHouses)  
 #surrHouses.to_csv('out.csv', index=False)
 patches = getHousePatches(surrHouses)
 surrHouses = patches[2]
-#Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
+#plot.Plot3DSurfaceWithPatches(surrElevation, patches[0], patches[1])
 
 #print(elevationSurfaceDelta((6254423.823571282, 1899007.0645571742, 353.18389024367815), surrElevation))
 #print(elevationSurfaceDelta((6254373.823571282, 1899057.0645571742, 353.18389024367815), surrElevation))
@@ -396,10 +316,9 @@ deltas = getSlopes((chosenHouseNParcel[3].centroid.x, chosenHouseNParcel[3].cent
 #if chosenHouseNParcel[1] == 2:
 #    result += getSlopes((chosenHouseNParcel[2][0].centroid.x, chosenHouseNParcel[2][0].centroid.y, chosenHouseNParcel[0] + 15))[0]
 
-#plotLOS2D(chosenHouseNParcel[3], deltas[1])
+#plot.plotLOS2D(chosenHouseNParcel[3], deltas[1])
 
 #FINALLY, ANALYSIS, we have finalDeltas, -500-500 for each line so middle is closest
-# TODO: PERFECT ANALYSIS ALGORITHM
 
 total = 0
 

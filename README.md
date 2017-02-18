@@ -110,7 +110,7 @@ The Zillow API gives us columns like:
 * zillow_id
 * home_type
 * latitude
-* latitude
+* longitude
 * tax_value
 * property_size
 * home_size
